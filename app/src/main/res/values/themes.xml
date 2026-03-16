@@ -1,79 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- res/values/themes.xml — Material Design 3 -->
-<resources xmlns:tools="http://schemas.android.com/tools">
-
-    <!-- Thème principal de l'application -->
-    <style name="Theme.LumiControl" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Couleurs Material You -->
+<resources>
+    <style name="Theme.LumiControl" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@color/on_primary</item>
         <item name="colorSecondary">@color/secondary</item>
-        <item name="colorSecondaryContainer">@color/secondary_container</item>
-
-        <!-- Arrière-plan et surface -->
         <item name="android:colorBackground">@color/background</item>
         <item name="colorSurface">@color/surface</item>
-        <item name="colorSurfaceVariant">@color/surface_variant</item>
-
-        <!-- Texte -->
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-
-        <!-- Navigation -->
-        <item name="navigationBarColor">@color/surface</item>
-        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
-
-        <!-- Coins arrondis (Material 3) -->
-        <item name="shapeAppearanceSmallComponent">@style/ShapeSmall</item>
-        <item name="shapeAppearanceMediumComponent">@style/ShapeMedium</item>
-        <item name="shapeAppearanceLargeComponent">@style/ShapeLarge</item>
     </style>
 
-    <!-- Thème de l'écran de démarrage -->
-    <style name="Theme.LumiControl.Splash" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/primary</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_bulb</item>
-        <item name="postSplashScreenTheme">@style/Theme.LumiControl</item>
-    </style>
-
-    <!-- Formes Material 3 -->
-    <style name="ShapeSmall" parent="ShapeAppearance.Material3.SmallComponent">
-        <item name="cornerSize">8dp</item>
-    </style>
-
-    <style name="ShapeMedium" parent="ShapeAppearance.Material3.MediumComponent">
-        <item name="cornerSize">12dp</item>
-    </style>
-
-    <style name="ShapeLarge" parent="ShapeAppearance.Material3.LargeComponent">
-        <item name="cornerSize">16dp</item>
-    </style>
-
-    <!-- Style des cartes ampoules -->
-    <style name="BulbCard" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardCornerRadius">16dp</item>
-        <item name="cardElevation">2dp</item>
-        <item name="android:layout_margin">8dp</item>
-    </style>
-
-    <!-- Style des chips -->
-    <style name="SceneChip" parent="Widget.Material3.Chip.Assist">
-        <item name="android:textSize">14sp</item>
-    </style>
-
-    <!-- Style des boutons principaux -->
-    <style name="PrimaryButton" parent="Widget.Material3.Button">
-        <item name="android:textAllCaps">false</item>
-        <item name="cornerRadius">12dp</item>
-        <item name="android:paddingHorizontal">24dp</item>
-    </style>
-
-    <!-- Style des sliders -->
-    <style name="BrightnessSlider" parent="Widget.Material3.Slider">
-        <item name="thumbColor">@color/primary</item>
-        <item name="trackColorActive">@color/primary</item>
-        <item name="trackColorInactive">@color/surface_variant</item>
-    </style>
-
+    <style name="Theme.LumiControl.Splash" parent="Theme.LumiControl" />
 </resources>
