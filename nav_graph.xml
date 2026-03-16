@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/navigation/nav_graph.xml -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <!-- Dashboard principal -->
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.lumicontrol.ui.fragments.HomeFragment"
+        android:label="Accueil">
+        <action
+            android:id="@+id/action_home_to_color"
+            app:destination="@id/colorFragment" />
+    </fragment>
+
+    <!-- Contrôle couleur d'une ampoule -->
+    <fragment
+        android:id="@+id/colorFragment"
+        android:name="com.lumicontrol.ui.fragments.ColorFragment"
+        android:label="Contrôle">
+        <argument
+            android:name="mac_address"
+            app:argType="string" />
+    </fragment>
+
+    <!-- Gestionnaire de scènes -->
+    <fragment
+        android:id="@+id/scenesFragment"
+        android:name="com.lumicontrol.ui.fragments.ScenesFragment"
+        android:label="Scènes">
+        <action
+            android:id="@+id/action_scenes_to_editor"
+            app:destination="@id/sceneEditorFragment" />
+    </fragment>
+
+    <!-- Éditeur de scène -->
+    <fragment
+        android:id="@+id/sceneEditorFragment"
+        android:name="com.lumicontrol.ui.fragments.SceneEditorFragment"
+        android:label="Nouvelle scène">
+        <argument
+            android:name="scene_id"
+            app:argType="long"
+            android:defaultValue="-1" />
+    </fragment>
+
+    <!-- Planificateur -->
+    <fragment
+        android:id="@+id/scheduleFragment"
+        android:name="com.lumicontrol.ui.fragments.ScheduleFragment"
+        android:label="Planifier">
+        <action
+            android:id="@+id/action_schedule_to_editor"
+            app:destination="@id/scheduleEditorFragment" />
+    </fragment>
+
+    <!-- Éditeur de planification -->
+    <fragment
+        android:id="@+id/scheduleEditorFragment"
+        android:name="com.lumicontrol.ui.fragments.ScheduleEditorFragment"
+        android:label="Nouvelle planification" />
+
+    <!-- Paramètres -->
+    <fragment
+        android:id="@+id/settingsFragment"
+        android:name="com.lumicontrol.ui.fragments.SettingsFragment"
+        android:label="Paramètres" />
+
+</navigation>

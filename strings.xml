@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- res/values/strings.xml -->
+<resources>
+    <string name="app_name">LumiControl</string>
+    <string name="app_tagline">Contrôlez vos lumières, gratuitement</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Accueil</string>
+    <string name="nav_scenes">Scènes</string>
+    <string name="nav_schedule">Planifier</string>
+    <string name="nav_settings">Réglages</string>
+
+    <!-- Actions -->
+    <string name="action_scan">Scanner</string>
+    <string name="action_connect">Connecter</string>
+    <string name="action_disconnect">Déconnecter</string>
+    <string name="action_all_on">Tout allumer</string>
+    <string name="action_all_off">Tout éteindre</string>
+    <string name="action_save">Sauvegarder</string>
+    <string name="action_delete">Supprimer</string>
+    <string name="action_cancel">Annuler</string>
+    <string name="action_add">Ajouter</string>
+    <string name="action_share">Partager</string>
+
+    <!-- États -->
+    <string name="state_connected">Connecté</string>
+    <string name="state_connecting">Connexion…</string>
+    <string name="state_disconnected">Déconnecté</string>
+    <string name="state_scanning">Recherche en cours…</string>
+    <string name="state_no_bulbs">Aucune ampoule connectée</string>
+
+    <!-- Messages -->
+    <string name="msg_scan_started">Recherche d\'ampoules à proximité…</string>
+    <string name="msg_scan_complete">Scan terminé</string>
+    <string name="msg_connect_success">Ampoule connectée avec succès !</string>
+    <string name="msg_connect_failed">Échec de la connexion</string>
+    <string name="msg_scene_applied">Scène appliquée</string>
+    <string name="msg_scene_saved">Scène sauvegardée</string>
+    <string name="msg_no_permission">Permissions Bluetooth requises</string>
+    <string name="msg_bt_disabled">Veuillez activer le Bluetooth</string>
+
+    <!-- Luminosité -->
+    <string name="label_brightness">Luminosité</string>
+    <string name="label_color_temperature">Température</string>
+    <string name="label_warm">Chaud</string>
+    <string name="label_cool">Froid</string>
+
+    <!-- Effets -->
+    <string name="effect_none">Aucun effet</string>
+    <string name="effect_fade">Fondu</string>
+    <string name="effect_strobe">Stroboscope</string>
+    <string name="effect_color_cycle">Cycle couleurs</string>
+    <string name="effect_breathing">Respiration</string>
+    <string name="effect_candle">Bougie</string>
+    <string name="effect_music">Sync musique</string>
+
+    <!-- Scènes -->
+    <string name="scene_relax">Relax</string>
+    <string name="scene_reading">Lecture</string>
+    <string name="scene_party">Fête</string>
+    <string name="scene_sleep">Sommeil</string>
+    <string name="scene_wakeup">Réveil</string>
+    <string name="scene_custom">Personnalisée</string>
+
+    <!-- Planification -->
+    <string name="schedule_once">Une fois</string>
+    <string name="schedule_daily">Tous les jours</string>
+    <string name="schedule_weekdays">Jours ouvrables</string>
+    <string name="schedule_weekends">Week-end</string>
+
+    <!-- Paramètres -->
+    <string name="pref_dark_mode">Mode sombre</string>
+    <string name="pref_dark_mode_summary">Suivre le thème du système</string>
+    <string name="pref_notifications">Notifications</string>
+    <string name="pref_notifications_summary">Rappels et planifications</string>
+    <string name="pref_about">À propos</string>
+    <string name="pref_version">Version</string>
+    <string name="pref_privacy">Confidentialité</string>
+    <string name="privacy_text">LumiControl ne collecte aucune donnée personnelle. Toutes les connexions sont locales via Bluetooth. Aucun compte requis.</string>
+
+    <!-- Permissions -->
+    <string name="perm_rationale_bt">LumiControl nécessite l\'accès Bluetooth pour détecter et contrôler vos ampoules.</string>
+    <string name="perm_rationale_audio">La synchronisation musicale nécessite l\'accès au microphone pour analyser le son ambiant.</string>
+    <string name="perm_rationale_notif">Les notifications sont utilisées uniquement pour les rappels de planification.</string>
+</resources>

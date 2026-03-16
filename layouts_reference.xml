@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ═══════════════════════════════════════════════
+     activity_main.xml — Layout activité principale
+     Navigation Bottom Bar + Toolbar + NavHost
+═══════════════════════════════════════════════ -->
+<!-- FILE: res/layout/activity_main.xml -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:title="LumiControl"
+            app:titleTextColor="@android:color/white"
+            android:background="@color/primary" />
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/nav_host_fragment"
+        android:name="androidx.navigation.fragment.NavHostFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        app:defaultNavHost="true"
+        app:navGraph="@navigation/nav_graph" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNavigationView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/surface"
+        app:menu="@menu/bottom_nav_menu"
+        app:labelVisibilityMode="labeled" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+<!-- ═══════════════════════════════════════════════
+     FILE: res/layout/fragment_home.xml
+═══════════════════════════════════════════════ -->
+<!--
+<androidx.core.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/background">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        // Résumé (ex: "3 ampoules • 2 allumées")
+        <TextView android:id="@+id/tvSummary" ... />
+
+        // Carte de contrôle global
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardGlobalControl" ...>
+            <LinearLayout android:orientation="vertical">
+                <LinearLayout android:orientation="horizontal">
+                    <Button android:id="@+id/btnAllOn"  android:text="Tout allumer" />
+                    <Button android:id="@+id/btnAllOff" android:text="Tout éteindre" />
+                </LinearLayout>
+                <com.google.android.material.slider.Slider
+                    android:id="@+id/sliderGlobalBrightness"
+                    android:valueFrom="0" android:valueTo="100" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        // Chips des scènes prédéfinies
+        <com.google.android.material.chip.ChipGroup
+            android:id="@+id/chipGroupScenes" ... />
+
+        // Grille des ampoules
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recyclerBulbs"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        // État vide
+        <LinearLayout android:id="@+id/layoutEmpty" ...>
+            <ImageView ... android:src="@drawable/ic_bulb_off" />
+            <TextView android:text="Aucune ampoule connectée\nAppuyez sur + pour scanner" />
+            <Button android:text="Scanner les ampoules" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
+-->
+
+<!-- ═══════════════════════════════════════════════
+     FILE: res/layout/item_bulb_card.xml
+═══════════════════════════════════════════════ -->
+<!--
+<com.google.android.material.card.MaterialCardView
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:padding="16dp">
+
+        // Préview couleur (cercle coloré)
+        <View android:id="@+id/viewColorPreview"
+            android:layout_width="48dp" android:layout_height="48dp" ... />
+
+        // Indicateur connexion (point vert/gris)
+        <View android:id="@+id/viewConnectionIndicator"
+            android:layout_width="10dp" android:layout_height="10dp" ... />
+
+        <TextView android:id="@+id/tvBulbName" ... />
+        <TextView android:id="@+id/tvRoomName" ... />
+        <TextView android:id="@+id/tvConnectionState" ... />
+        <TextView android:id="@+id/tvBrightness" ... />
+        <TextView android:id="@+id/tvSignal" ... />
+
+        // Switch on/off
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchPower" ... />
+
+        // Bouton favori
+        <ImageButton android:id="@+id/btnFavorite"
+            android:src="@drawable/ic_star_outline" ... />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>
+-->
+
+<!-- ═══════════════════════════════════════════════
+     FILE: res/layout/fragment_color.xml
+═══════════════════════════════════════════════ -->
+<!--
+<androidx.core.widget.NestedScrollView>
+    <LinearLayout android:orientation="vertical" android:padding="16dp">
+
+        <TextView android:id="@+id/tvBulbName" style="headline" />
+
+        // Bouton power flottant
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabPower" ... />
+
+        // Aperçu couleur actuelle
+        <View android:id="@+id/viewColorPreview"
+            android:layout_width="match_parent" android:layout_height="80dp" ... />
+
+        // Color picker (skydoves library)
+        <com.skydoves.colorpickerview.ColorPickerView
+            android:id="@+id/colorPickerView"
+            android:layout_width="match_parent"
+            android:layout_height="300dp" />
+
+        // Palettes de couleurs rapides
+        <HorizontalScrollView>
+            <LinearLayout android:id="@+id/layoutColorPresets" android:orientation="horizontal" />
+        </HorizontalScrollView>
+
+        // Luminosité
+        <TextView android:text="Luminosité" />
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderBrightness"
+            android:valueFrom="0" android:valueTo="100" />
+        <TextView android:id="@+id/tvBrightnessValue" />
+
+        // Température de couleur
+        <TextView android:text="Température (K)" />
+        <com.google.android.material.slider.Slider
+            android:id="@+id/sliderTemperature"
+            android:valueFrom="2700" android:valueTo="6500" />
+        <TextView android:id="@+id/tvTemperatureValue" />
+
+        // Effets
+        <com.google.android.material.chip.ChipGroup>
+            <Chip android:id="@+id/chipFade"       android:text="Fondu" />
+            <Chip android:id="@+id/chipStrobe"     android:text="Stroboscope" />
+            <Chip android:id="@+id/chipColorCycle" android:text="Cycle couleurs" />
+            <Chip android:id="@+id/chipBreathing"  android:text="Respiration" />
+            <Chip android:id="@+id/chipMusicSync"  android:text="🎵 Musique" />
+        </com.google.android.material.chip.ChipGroup>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
+-->
