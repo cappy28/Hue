@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:background="#FF6B35"
+    android:padding="8dp">
+
+    <Button
+        android:id="@+id/btn_widget_on"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ON"
+        android:textColor="#FFFFFF"/>
+
+    <TextView
+        android:id="@+id/tv_widget_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0 ampoule"
+        android:textColor="#FFFFFF"
+        android:layout_margin="8dp"/>
+
+    <Button
+        android:id="@+id/btn_widget_off"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="OFF"
+        android:textColor="#FFFFFF"/>
+</LinearLayout>
