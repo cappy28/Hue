@@ -1,12 +1,10 @@
 package com.lumicontrol.ui.adapters
 
-import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.lumicontrol.models.Bulb
-import com.lumicontrol.models.ConnectionState
 
 class BulbCardAdapter(
     private val onBulbClick: (Bulb) -> Unit,
@@ -35,7 +33,12 @@ class ScanResultAdapter(
 
     private val items = mutableListOf<Bulb>()
 
-    fun submitScanList(bulbs: List<Bulb>) { items.clear(); items.addAll(bulbs); notifyDataSetChanged() }
+    fun submitScanList(bulbs: List<Bulb>) {
+        items.clear()
+        items.addAll(bulbs)
+        notifyDataSetChanged()
+    }
+
     fun submitHistoryList(bulbs: List<Bulb>) {}
 
     inner class ViewHolder(val view: android.view.View) : RecyclerView.ViewHolder(view)
