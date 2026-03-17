@@ -144,7 +144,6 @@ class BleManager private constructor(private val context: Context) {
                     macAddress = device.address,
                     name = name ?: "Ampoule ${device.address.takeLast(5)}",
                     type = BulbGattProfile.detectType(name ?: "", result),
-                    signalStrength = result.rssi
                 )
                 scannedDevices.add(bulb)
                 _scanResults.value = scannedDevices.toList()
