@@ -18,7 +18,7 @@ import kotlinx.coroutines.flow.Flow
 @Database(
     entities = [Bulb::class, Scene::class, Schedule::class, BulbGroup::class],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
 @TypeConverters(SceneConverters::class)
 abstract class AppDatabase : RoomDatabase() {
