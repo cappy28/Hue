@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/homeFragment"
+        android:icon="@drawable/ic_bulb"
+        android:title="Accueil"/>
+    <item
+        android:id="@+id/scenesFragment"
+        android:icon="@drawable/ic_bulb"
+        android:title="Scènes"/>
+    <item
+        android:id="@+id/scheduleFragment"
+        android:icon="@drawable/ic_bulb"
+        android:title="Planifier"/>
+    <item
+        android:id="@+id/settingsFragment"
+        android:icon="@drawable/ic_bulb"
+        android:title="Réglages"/>
+</menu>
