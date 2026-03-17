@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_scan"
+        android:title="Scanner"
+        app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/action_all_on"
+        android:title="Tout allumer"
+        app:showAsAction="never"/>
+    <item
+        android:id="@+id/action_all_off"
+        android:title="Tout éteindre"
+        app:showAsAction="never"/>
+</menu>
