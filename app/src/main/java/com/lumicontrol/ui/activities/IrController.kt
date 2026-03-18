@@ -12,7 +12,11 @@ class IrController(private val context: Context) {
     fun send(code: Int) {
         if (!hasIR()) return
         try {
-            irManager?.transmit(38000, necToPulse(code))
+            fun sendWithFreq(code: Int, freq: Int) {
+    try {
+        irManager?.transmit(freq, necToPulse(code))
+    } catch (e: Exception) {}
+            }
         } catch (e: Exception) {}
     }
 
