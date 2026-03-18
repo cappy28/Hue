@@ -12,11 +12,14 @@ class IrController(private val context: Context) {
     fun send(code: Int) {
         if (!hasIR()) return
         try {
-            fun sendWithFreq(code: Int, freq: Int) {
-    try {
-        irManager?.transmit(freq, necToPulse(code))
-    } catch (e: Exception) {}
-            }
+            irManager?.transmit(38000, necToPulse(code))
+        } catch (e: Exception) {}
+    }
+
+    fun sendWithFreq(code: Int, freq: Int) {
+        if (!hasIR()) return
+        try {
+            irManager?.transmit(freq, necToPulse(code))
         } catch (e: Exception) {}
     }
 
@@ -40,7 +43,19 @@ class IrController(private val context: Context) {
         context.getSharedPreferences("ir_codes", Context.MODE_PRIVATE)
             .getInt(key, 0)
 
-    // ── Codes Wall Light (grande télécommande) ──
+    fun saveBalCode(button: String, code: Int) = saveCode("bal_$button", code)
+    fun getBalCode(button: String) = getCode("bal_$button")
+
+    fun saveBalFreq(button: String, freq: Int) {
+        context.getSharedPreferences("ir_codes", Context.MODE_PRIVATE)
+            .edit().putInt("freq_$button", freq).apply()
+    }
+
+    fun getBalFreq(button: String) =
+        context.getSharedPreferences("ir_codes", Context.MODE_PRIVATE)
+            .getInt("freq_$button", 38000)
+
+    // ── Codes Wall Light (grande télécommande 44 touches) ──
     val WL_ON       = 0xFF02FD
     val WL_OFF      = 0xFF827D
     val WL_BRIGHT_P = 0xFF3AC5
@@ -64,10 +79,7 @@ class IrController(private val context: Context) {
     val WL_MUSIC3   = 0xFF7887
     val WL_MUSIC4   = 0xFFF807
 
-    // ── Codes Baltimore à scanner ──
-    fun getBalCode(button: String) = getCode("bal_$button")
-    fun saveBalCode(button: String, code: Int) = saveCode("bal_$button", code)
-
+    // ── Codes à scanner pour Baltimore ──
     fun irScanCodes() = listOf(
         0xFF30CF, 0xFFB04F, 0xFF708F, 0xFFF00F,
         0xFF50AF, 0xFFD02F, 0xFF10EF, 0xFF906F,
@@ -81,6 +93,11 @@ class IrController(private val context: Context) {
         0xFF12ED, 0xFF926D, 0xFF52AD, 0xFFD22D,
         0xFF32CD, 0xFFB24D, 0xFF728D, 0xFFF20D,
         0xFF1AE5, 0xFF9A65, 0xFF5AA5, 0xFFDA25,
-        0xFF3AC5, 0xFFBA45, 0xFF7A85, 0xFFFA05
+        0xFF3AC5, 0xFFBA45, 0xFF7A85, 0xFFFA05,
+        0xF700FF, 0xF7807F, 0xF740BF, 0xF7C03F,
+        0xF720DF, 0xF7A05F, 0xF7609F, 0xF7E01F,
+        0xF710EF, 0xF7906F, 0xF750AF, 0xF7D02F
     )
+
+    fun irScanFreqs() = listOf(38000, 36000, 40000, 56000)
 }
