@@ -4,7 +4,10 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
-import android.media.MediaRecorder
+import android.media.AudioAttributes
+import android.media.AudioPlaybackCaptureConfiguration
+import android.media.projection.MediaProjection
+import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.*
@@ -33,9 +36,24 @@ class MainActivity : AppCompatActivity() {
     private var lastScannedFreq = 38000
     private var scanningFor = "on"
 
+    // Audio projection
+    private var mediaProjectionManager: MediaProjectionManager? = null
+    private var mediaProjection: MediaProjection? = null
+
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { hue.scan() }
+
+    private val projectionLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK && result.data != null) {
+            mediaProjection = mediaProjectionManager?.getMediaProjection(result.resultCode, result.data!!)
+            startAudioCapture()
+        } else {
+            tvStatus.text = "❌ Permission audio refusée"
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,6 +61,7 @@ class MainActivity : AppCompatActivity() {
 
         hue = HueController(this) { msg -> runOnUiThread { tvStatus.text = msg } }
         ir  = IrController(this)
+        mediaProjectionManager = getSystemService(MediaProjectionManager::class.java)
 
         tvStatus       = findViewById(R.id.tvStatus)
         seekBrightness = findViewById(R.id.seekBrightness)
@@ -214,7 +233,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun startBaltimoreScan() {
         scanJob?.cancel()
-        tvStatus.text = "🔍 Scanner pour '$scanningFor' — Regarde la lampe !\nQuand elle réagit → STOP !"
+        tvStatus.text = "🔍 Scanner pour '$scanningFor'\nQuand la lampe réagit → STOP !"
         scanJob = hue.scope.launch {
             for (freq in ir.irScanFreqs()) {
                 for (code in ir.irScanCodes()) {
@@ -227,7 +246,7 @@ class MainActivity : AppCompatActivity() {
                     delay(800)
                 }
             }
-            runOnUiThread { tvStatus.text = "❌ Scan terminé sans réponse — réessaie" }
+            runOnUiThread { tvStatus.text = "❌ Scan terminé — réessaie" }
         }
     }
 
@@ -384,90 +403,67 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ══════════════════════════════════════════
-    // SYNC MUSIQUE
+    // SYNC MUSIQUE — AUDIO TÉLÉPHONE
     // ══════════════════════════════════════════
 
     private fun startMusicSync() {
         stopEffect(); stopMusicSync()
-        tvStatus.text = "🎵 Sync musique ON"
+        tvStatus.text = "🎵 Autorisation audio..."
+        projectionLauncher.launch(mediaProjectionManager?.createScreenCaptureIntent())
+    }
+
+    private fun startAudioCapture() {
+        tvStatus.text = "🎵 Sync audio téléphone ON"
         musicJob = hue.scope.launch {
+            val config = AudioPlaybackCaptureConfiguration.Builder(mediaProjection!!)
+                .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
+                .addMatchingUsage(AudioAttributes.USAGE_GAME)
+                .build()
+
+            val audioFormat = AudioFormat.Builder()
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                .setSampleRate(44100)
+                .setChannelMask(AudioFormat.CHANNEL_IN_STEREO)
+                .build()
+
             val bufSize = AudioRecord.getMinBufferSize(
                 44100,
-                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.CHANNEL_IN_STEREO,
                 AudioFormat.ENCODING_PCM_16BIT
             ) * 2
-            var ar: AudioRecord? = null
-            try {
-                ar = AudioRecord(
-                    MediaRecorder.AudioSource.MIC, 44100,
-                    AudioFormat.CHANNEL_IN_MONO,
-                    AudioFormat.ENCODING_PCM_16BIT, bufSize
-                )
-                ar.startRecording()
-                val buf = ShortArray(bufSize)
-                var smoothed = 0f
-                while (isActive) {
-                    val read = ar.read(buf, 0, bufSize)
-                    if (read > 0) {
-                        var sum = 0.0
-                        for (i in 0 until read) {
-                            val s = buf[i] / 32768f; sum += s * s
-                        }
-                        val rms = sqrt(sum / read).toFloat().coerceIn(0f, 1f)
-                        smoothed = 0.3f * smoothed + 0.7f * rms
-                        hue.setBrightness(254)
-                        val (r, g, b) = when {
-                            smoothed < 0.15f -> Triple(0, 50, 255)
-                            smoothed < 0.35f -> Triple(0, 255, 150)
-                            smoothed < 0.6f  -> Triple(255, 200, 0)
-                            smoothed < 0.8f  -> Triple(255, 80, 0)
-                            else             -> Triple(255, 0, 0)
-                        }
-                        hue.setColor(r, g, b)
+
+            val ar = AudioRecord.Builder()
+                .setAudioPlaybackCaptureConfig(config)
+                .setAudioFormat(audioFormat)
+                .setBufferSizeInBytes(bufSize)
+                .build()
+
+            ar.startRecording()
+            val buf = ShortArray(bufSize)
+            var smoothed = 0f
+
+            while (isActive) {
+                val read = ar.read(buf, 0, bufSize)
+                if (read > 0) {
+                    var sum = 0.0
+                    for (i in 0 until read) {
+                        val s = buf[i] / 32768f; sum += s * s
                     }
-                    delay(50)
+                    val rms = sqrt(sum / read).toFloat().coerceIn(0f, 1f)
+                    smoothed = 0.4f * smoothed + 0.6f * rms
+                    val amplified = (smoothed * 5f).coerceIn(0f, 1f)
+                    hue.setBrightness(254)
+                    val (r, g, b) = when {
+                        amplified < 0.1f  -> Triple(0, 50, 255)
+                        amplified < 0.25f -> Triple(0, 200, 255)
+                        amplified < 0.4f  -> Triple(0, 255, 100)
+                        amplified < 0.6f  -> Triple(255, 220, 0)
+                        amplified < 0.8f  -> Triple(255, 100, 0)
+                        else              -> Triple(255, 0, 0)
+                    }
+                    hue.setColor(r, g, b)
                 }
-            } catch (e: SecurityException) {
-                runOnUiThread { tvStatus.text = "❌ Permission micro refusée" }
-            } finally {
-                ar?.stop(); ar?.release()
+                delay(50)
             }
-        }
-    }
-
-    private fun stopMusicSync() { musicJob?.cancel(); musicJob = null }
-
-    // ══════════════════════════════════════════
-    // PERMISSIONS
-    // ══════════════════════════════════════════
-
-    private fun checkPermissionsAndScan() {
-        val perms = mutableListOf<String>()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            perms.add(Manifest.permission.BLUETOOTH_SCAN)
-            perms.add(Manifest.permission.BLUETOOTH_CONNECT)
-        } else {
-            perms.add(Manifest.permission.BLUETOOTH)
-            perms.add(Manifest.permission.ACCESS_FINE_LOCATION)
-        }
-        perms.add(Manifest.permission.RECORD_AUDIO)
-        val missing = perms.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-        if (missing.isNotEmpty()) permissionLauncher.launch(missing.toTypedArray())
-        else hue.scan()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        stopEffect(); stopMusicSync(); scanJob?.cancel()
-        hue.release()
-    }
-}
-
-class ScanActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        finish()
-    }
-}
+            ar.stop(); ar.release()
+   
