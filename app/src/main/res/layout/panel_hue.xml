@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <View android:id="@+id/viewColor" android:layout_width="match_parent"
+        android:layout_height="50dp" android:background="#FF6B35" android:layout_marginBottom="8dp"/>
+
+    <Button android:id="@+id/btnScan" android:text="🔍 Scanner Hue"
+        android:layout_width="match_parent" android:layout_height="46dp"
+        android:backgroundTint="#FF6B35" android:layout_marginBottom="6dp"/>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginBottom="8dp">
+        <Button android:id="@+id/btnHueOn" android:text="☀️ ON"
+            android:layout_width="0dp" android:layout_height="46dp" android:layout_weight="1"
+            android:layout_marginEnd="4dp" android:backgroundTint="#FFD700"/>
+        <Button android:id="@+id/btnHueOff" android:text="🌙 OFF"
+            android:layout_width="0dp" android:layout_height="46dp" android:layout_weight="1"
+            android:backgroundTint="#222244"/>
+    </LinearLayout>
+
+    <TextView android:text="☀️ Luminosité" android:textColor="#CCCCCC"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+    <SeekBar android:id="@+id/seekBrightness" android:max="254"
+        android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp"/>
+
+    <TextView android:text="🎨 RGB" android:textColor="#CCCCCC"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+    <SeekBar android:id="@+id/seekRed" android:max="255" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <SeekBar android:id="@+id/seekGreen" android:max="255" android:layout_width="match_parent" android:layout_height="wrap_content"/>
+    <SeekBar android:id="@+id/seekBlue" android:max="255" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="8dp"/>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="4dp">
+        <Button android:id="@+id/hueRed" android:text="🔴" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#FF0000"/>
+        <Button android:id="@+id/hueGreen" android:text="🟢" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#00CC00"/>
+        <Button android:id="@+id/hueBlue" android:text="🔵" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#0044FF"/>
+        <Button android:id="@+id/hueWhite" android:text="⚪" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#DDDDDD"/>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
+        <Button android:id="@+id/hueOrange" android:text="🟠" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#FF6400"/>
+        <Button android:id="@+id/huePink" android:text="🩷" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#FF0096"/>
+        <Button android:id="@+id/huePurple" android:text="🟣" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#7700FF"/>
+        <Button android:id="@+id/hueYellow" android:text="🟡" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#FFCC00"/>
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
+        <Button android:id="@+id/hueWarm" android:text="🕯️ Chaud" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#FF8C42"/>
+        <Button android:id="@+id/hueDay" android:text="🌤️ Jour" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#FFEEAA"/>
+        <Button android:id="@+id/hueCool" android:text="❄️ Froid" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#AACCFF"/>
+    </LinearLayout>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="4dp">
+        <Button android:id="@+id/hueFade" android:text="🌅" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+        <Button android:id="@+id/hueStrobe" android:text="⚡" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+        <Button android:id="@+id/hueRainbow" android:text="🌈" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+        <Button android:id="@+id/hueBreath" android:text="💨" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+    </LinearLayout>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="6dp">
+        <Button android:id="@+id/hueLightning" android:text="⛈️" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+        <Button android:id="@+id/hueFire" android:text="🔥" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+        <Button android:id="@+id/huePolice" android:text="🚨" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+        <Button android:id="@+id/hueParty" android:text="🎉" android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1" android:backgroundTint="#334"/>
+    </LinearLayout>
+
+    <Button android:id="@+id/hueStop" android:text="⏹️ Stop effet"
+        android:layout_width="match_parent" android:layout_height="42dp"
+        android:backgroundTint="#CC0000" android:layout_marginBottom="8dp"/>
+
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:layout_marginBottom="8dp">
+        <Button android:id="@+id/hueMusicOn" android:text="🎵 Sync musique"
+            android:layout_width="0dp" android:layout_height="46dp" android:layout_weight="1"
+            android:layout_marginEnd="4dp" android:backgroundTint="#9C27B0"/>
+        <Button android:id="@+id/hueMusicOff" android:text="⏹️ Stop"
+            android:layout_width="0dp" android:layout_height="46dp" android:layout_weight="1"
+            android:backgroundTint="#CC0000"/>
+    </LinearLayout>
+</LinearLayout>
