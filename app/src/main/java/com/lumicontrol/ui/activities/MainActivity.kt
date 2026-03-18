@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
     private val WL_SPEED_M   = 0xFFA05F
     private val WL_MUSIC1    = 0xFF58A7
     private val WL_MUSIC2    = 0xFFD827
-    private val WL_MUSIC3    = 0xFF788  7
+    private val WL_MUSIC3    = 0xFF7887
     private val WL_MUSIC4    = 0xFFF807
 
     private lateinit var tvStatus: TextView
