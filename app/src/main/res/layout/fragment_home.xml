@@ -3,10 +3,43 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:padding="24dp">
+
     <TextView
-        android:text="LumiControl"
-        android:textSize="24sp"
+        android:text="💡 LumiControl"
+        android:textSize="32sp"
+        android:textStyle="bold"
         android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/tvStatus"
+        android:text="Aucune ampoule connectée"
+        android:textSize="16sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"/>
+
+    <Button
+        android:id="@+id/btnScan"
+        android:text="🔍 Scanner les ampoules"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnAllOn"
+        android:text="☀️ Tout allumer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/btnAllOff"
+        android:text="🌙 Tout éteindre"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
+
 </LinearLayout>
