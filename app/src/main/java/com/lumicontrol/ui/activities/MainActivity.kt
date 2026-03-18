@@ -436,6 +436,171 @@ class MainActivity : AppCompatActivity() {
 
     // ══════════════════════════════════════════
     // EFFETS HUE
-    // ══════════════════════════════════════════
+    // ════════════════════════════════════════
+    
+private fun stopEffect() { effectJob?.cancel(); effectJob = null }
 
-    private fun stopEffect() { effectJob?.
+    private fun startFade() {
+        stopEffect(); tvStatus.text = "🌅 Fondu"
+        effectJob = scope.launch {
+            var b = 254; var d = -1
+            while (isActive) {
+                setBrightness(b); b += d * 6
+                if (b <= 5) d = 1; if (b >= 254) d = -1
+                delay(60)
+            }
+        }
+    }
+
+    private fun startStrobe() {
+        stopEffect(); tvStatus.text = "⚡ Stroboscope"
+        effectJob = scope.launch {
+            var on = true
+            while (isActive) { setPower(on); on = !on; delay(80) }
+        }
+    }
+
+    private fun startRainbow() {
+        stopEffect(); tvStatus.text = "🌈 Arc-en-ciel"
+        effectJob = scope.launch {
+            var hue = 0f
+            while (isActive) {
+                val c = android.graphics.Color.HSVToColor(floatArrayOf(hue, 1f, 1f))
+                setColor(android.graphics.Color.red(c), android.graphics.Color.green(c), android.graphics.Color.blue(c))
+                hue = (hue + 2f) % 360f; delay(80)
+            }
+        }
+    }
+
+    private fun startBreathing() {
+        stopEffect(); tvStatus.text = "💨 Respiration"
+        effectJob = scope.launch {
+            var b = 5; var d = 1
+            while (isActive) {
+                setBrightness(b); b += d * 4
+                if (b >= 254) d = -1; if (b <= 5) d = 1
+                delay(40)
+            }
+        }
+    }
+
+    private fun startLightning() {
+        stopEffect(); tvStatus.text = "⛈️ Éclair"
+        effectJob = scope.launch {
+            while (isActive) {
+                setColor(255, 255, 255); setBrightness(254)
+                delay((30..100).random().toLong())
+                setPower(false); delay((50..200).random().toLong())
+                setPower(true); delay((1000..4000).random().toLong())
+            }
+        }
+    }
+
+    private fun startFire() {
+        stopEffect(); tvStatus.text = "🔥 Feu"
+        effectJob = scope.launch {
+            while (isActive) {
+                setColor((200..255).random(), (20..70).random(), 0)
+                setBrightness((80..254).random())
+                delay((40..120).random().toLong())
+            }
+        }
+    }
+
+    private fun startPolice() {
+        stopEffect(); tvStatus.text = "🚨 Police"
+        effectJob = scope.launch {
+            while (isActive) {
+                setColor(255, 0, 0); delay(150)
+                setPower(false); delay(80); setPower(true); delay(150)
+                setPower(false); delay(80); setPower(true); delay(200)
+                setColor(0, 0, 255); delay(150)
+                setPower(false); delay(80); setPower(true); delay(150)
+                setPower(false); delay(80); setPower(true); delay(200)
+            }
+        }
+    }
+
+    private fun startParty() {
+        stopEffect(); tvStatus.text = "🎉 Fête"
+        val colors = listOf(
+            Triple(255,0,0), Triple(0,255,0), Triple(0,0,255),
+            Triple(255,255,0), Triple(255,0,255), Triple(0,255,255),
+            Triple(255,128,0), Triple(128,0,255)
+        )
+        effectJob = scope.launch {
+            while (isActive) {
+                val c = colors.random()
+                setColor(c.first, c.second, c.third)
+                setBrightness((150..254).random())
+                delay((100..400).random().toLong())
+            }
+        }
+    }
+
+    private fun startMusicSync() {
+        stopEffect(); stopMusicSync()
+        tvStatus.text = "🎵 Sync musique ON"
+        musicJob = scope.launch {
+            val bufSize = AudioRecord.getMinBufferSize(44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 2
+            var ar: AudioRecord? = null
+            try {
+                ar = AudioRecord(MediaRecorder.AudioSource.MIC, 44100,
+                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize)
+                ar.startRecording()
+                val buf = ShortArray(bufSize)
+                var smoothed = 0f
+                while (isActive) {
+                    val read = ar.read(buf, 0, bufSize)
+                    if (read > 0) {
+                        var sum = 0.0
+                        for (i in 0 until read) { val s = buf[i] / 32768f; sum += s * s }
+                        val rms = sqrt(sum / read).toFloat().coerceIn(0f, 1f)
+                        smoothed = 0.3f * smoothed + 0.7f * rms
+                        val bright = (smoothed * 2.5f * 254f).toInt().coerceIn(5, 254)
+                        val (r, g, b) = when {
+                            smoothed < 0.15f -> Triple(0, 50, 255)
+                            smoothed < 0.35f -> Triple(0, 255, 150)
+                            smoothed < 0.6f  -> Triple(255, 200, 0)
+                            else             -> Triple(255, 0, 0)
+                        }
+                        setBrightness(bright); setColor(r, g, b)
+                    }
+                    delay(50)
+                }
+            } catch (e: SecurityException) {
+                runOnUiThread { tvStatus.text = "❌ Permission micro refusée" }
+            } finally { ar?.stop(); ar?.release() }
+        }
+    }
+
+    private fun stopMusicSync() {
+        musicJob?.cancel(); musicJob = null
+    }
+
+    private fun rgbToXY(r: Int, g: Int, b: Int): Pair<Float, Float> {
+        var red = r / 255f; var green = g / 255f; var blue = b / 255f
+        red   = if (red   > 0.04045f) Math.pow(((red   + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else red   / 12.92f
+        green = if (green > 0.04045f) Math.pow(((green + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else green / 12.92f
+        blue  = if (blue  > 0.04045f) Math.pow(((blue  + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else blue  / 12.92f
+        val X = red * 0.664511f + green * 0.154324f + blue * 0.162028f
+        val Y = red * 0.283881f + green * 0.668433f + blue * 0.047685f
+        val Z = red * 0.000088f + green * 0.072310f + blue * 0.986039f
+        val sum = X + Y + Z
+        if (sum == 0f) return Pair(0f, 0f)
+        return Pair(X / sum, Y / sum)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopEffect(); stopMusicSync(); scope.cancel()
+        try { connectedGatt?.close() } catch (e: SecurityException) {}
+    }
+}
+
+class ScanActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        finish()
+    }
+}
