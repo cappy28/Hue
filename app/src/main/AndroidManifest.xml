@@ -1,58 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- ===== PERMISSIONS BLUETOOTH ===== -->
-    <!-- Android 11 et inférieur -->
-    <uses-permission android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="30" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="30" />
-
-    <!-- Android 12+ -->
-    <uses-permission android:name="android.permission.BLUETOOTH_SCAN"
-        android:usesPermissionFlags="neverForLocation"
-        tools:targetApi="s" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
-
-    <!-- Localisation (requis pour BLE sur Android < 12) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-
-    <!-- Audio (synchronisation musicale) -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <!-- Services arrière-plan -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
-    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
-
-    <!-- Notifications -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Vibration (retour haptique) -->
-    <uses-permission android:name="android.permission.VIBRATE" />
-
-    <!-- BLE requis -->
     <uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
 
     <application
-        android:name=".LumiControlApp"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="LumiControl"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.LumiControl"
-        android:usesCleartextTraffic="false">
+        android:theme="@style/Theme.LumiControl">
 
-        <!-- ===== ACTIVITÉS ===== -->
         <activity
-            android:name=".ui.activities.SplashActivity"
-            android:exported="true"
-            android:noHistory="true"
-            android:theme="@style/Theme.LumiControl.Splash">
+            android:name=".ui.activities.MainActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -60,57 +30,8 @@
         </activity>
 
         <activity
-            android:name=".ui.activities.MainActivity"
-            android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-
-        <activity
             android:name=".ui.activities.ScanActivity"
             android:exported="false" />
-
-        <activity
-            android:name=".ui.activities.BulbDetailActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".ui.activities.SettingsActivity"
-            android:exported="false" />
-
-        <!-- ===== SERVICES ===== -->
-        <service
-            android:name=".services.BleService"
-            android:exported="false"
-            android:foregroundServiceType="connectedDevice" />
-
-        <service
-            android:name=".services.MusicSyncService"
-            android:exported="false"
-            android:foregroundServiceType="microphone" />
-
-        <!-- ===== RECEIVERS ===== -->
-        <receiver
-            android:name=".receivers.BootReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
-
-        <receiver
-            android:name=".receivers.ScheduleReceiver"
-            android:exported="false" />
-
-        <!-- ===== PROVIDER (widget) ===== -->
-        <receiver
-            android:name=".widget.LumiWidgetProvider"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/lumi_widget_info" />
-        </receiver>
 
     </application>
 </manifest>
