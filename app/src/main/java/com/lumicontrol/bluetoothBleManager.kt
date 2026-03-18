@@ -9,57 +9,40 @@ import android.util.Log
 import com.lumicontrol.models.Bulb
 import com.lumicontrol.models.BulbType
 import com.lumicontrol.models.ConnectionState
+import com.lumicontrol.models.LightEffect
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.UUID
 
-/**
- * ════════════════════════════════════════════════════════════
- * BleManager — Gestionnaire central Bluetooth Low Energy
- * ════════════════════════════════════════════════════════════
- *
- * Singleton responsable de :
- *  - Scanner les appareils BLE à proximité
- *  - Gérer les connexions GATT simultanées (jusqu'à 7)
- *  - Envoyer des commandes (couleur, luminosité, on/off)
- *  - Émettre l'état en temps réel via StateFlow
- */
 class BleManager private constructor(private val context: Context) {
 
     companion object {
         private const val TAG = "BleManager"
-        private const val SCAN_PERIOD_MS = 10_000L  // 10 secondes de scan
+        private const val SCAN_PERIOD_MS = 10_000L
 
-        // ─── UUIDs GATT standards pour ampoules RGB génériques ───
-        val SERVICE_UUID: UUID       = UUID.fromString("0000FFD5-0000-1000-8000-00805F9B34FB")
-        val COLOR_CHAR_UUID: UUID    = UUID.fromString("0000FFD9-0000-1000-8000-00805F9B34FB")
-        val NOTIFY_CHAR_UUID: UUID   = UUID.fromString("0000FFD4-0000-1000-8000-00805F9B34FB")
-        val BATTERY_SERVICE: UUID    = UUID.fromString("0000180F-0000-1000-8000-00805F9B34FB")
-        val BATTERY_CHAR_UUID: UUID  = UUID.fromString("00002A19-0000-1000-8000-00805F9B34FB")
+        // UUIDs Philips Hue Bluetooth
+        val HUE_SERVICE_UUID = UUID.fromString("932c32bd-0000-47a2-835a-a8d455b859dd")
+        val HUE_POWER_UUID   = UUID.fromString("932c32bd-0002-47a2-835a-a8d455b859dd")
+        val HUE_BRIGHT_UUID  = UUID.fromString("932c32bd-0003-47a2-835a-a8d455b859dd")
+        val HUE_COLOR_UUID   = UUID.fromString("932c32bd-0005-47a2-835a-a8d455b859dd")
 
-        @Volatile
-        private var INSTANCE: BleManager? = null
-
+        @Volatile private var INSTANCE: BleManager? = null
         fun getInstance(context: Context): BleManager =
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: BleManager(context.applicationContext).also { INSTANCE = it }
             }
     }
 
-    // ─── Adaptateur et scanner BLE ───
     private val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     private val bluetoothAdapter: BluetoothAdapter? get() = bluetoothManager.adapter
     private val bleScanner: BluetoothLeScanner? get() = bluetoothAdapter?.bluetoothLeScanner
 
-    // ─── Connexions GATT actives ───
     private val gattConnections = mutableMapOf<String, BluetoothGatt>()
-
-    // ─── Coroutines ───
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val mainHandler = Handler(Looper.getMainLooper())
+    private val scannedDevices = mutableListOf<Bulb>()
 
-    // ─── État observable ───
     private val _scanResults = MutableStateFlow<List<Bulb>>(emptyList())
     val scanResults: StateFlow<List<Bulb>> = _scanResults
 
@@ -69,238 +52,155 @@ class BleManager private constructor(private val context: Context) {
     private val _isScanning = MutableStateFlow(false)
     val isScanning: StateFlow<Boolean> = _isScanning
 
-    private val _bleEnabled = MutableStateFlow(bluetoothAdapter?.isEnabled == true)
-    val bleEnabled: StateFlow<Boolean> = _bleEnabled
+    val bleEnabled: StateFlow<Boolean> get() = MutableStateFlow(bluetoothAdapter?.isEnabled == true)
 
-    // ─── Buffer des résultats de scan ───
-    private val scannedDevices = mutableListOf<Bulb>()
-
-    // ════════════════════════════════════════════════════════════
+    // ════════════════════════════
     // SCAN
-    // ════════════════════════════════════════════════════════════
+    // ════════════════════════════
 
-    /**
-     * Lance un scan BLE pendant SCAN_PERIOD_MS millisecondes.
-     * Filtre les appareils connus pour ne montrer que les ampoules probables.
-     */
     fun startScan() {
         if (_isScanning.value) return
-        if (bluetoothAdapter?.isEnabled != true) {
-            Log.w(TAG, "Bluetooth désactivé — impossible de scanner")
-            return
-        }
-
+        if (bluetoothAdapter?.isEnabled != true) return
         scannedDevices.clear()
         _isScanning.value = true
-
-        // Filtre : chercher les services d'ampoules connues
-        val filters = listOf(
-            ScanFilter.Builder()
-                .setServiceUuid(android.os.ParcelUuid(SERVICE_UUID))
-                .build()
-            // Ajouter d'autres filtres selon les marques ici
-        )
-
         val settings = ScanSettings.Builder()
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
-            .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
             .build()
-
         try {
-            bleScanner?.startScan(null, settings, scanCallback) // null = pas de filtre = tout voir
-            Log.d(TAG, "Scan BLE démarré")
+            bleScanner?.startScan(null, settings, scanCallback)
         } catch (e: SecurityException) {
-            Log.e(TAG, "Permission Bluetooth manquante : ${e.message}")
             _isScanning.value = false
             return
         }
-
-        // Arrêt automatique après SCAN_PERIOD_MS
         mainHandler.postDelayed({ stopScan() }, SCAN_PERIOD_MS)
     }
 
-    /** Arrête le scan BLE en cours. */
     fun stopScan() {
         if (!_isScanning.value) return
-        try {
-            bleScanner?.stopScan(scanCallback)
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Erreur arrêt scan : ${e.message}")
-        }
+        try { bleScanner?.stopScan(scanCallback) } catch (e: SecurityException) {}
         _isScanning.value = false
         _scanResults.value = scannedDevices.toList()
-        Log.d(TAG, "Scan arrêté — ${scannedDevices.size} appareil(s) trouvé(s)")
     }
 
-    /** Callback de scan BLE — appelé pour chaque appareil détecté. */
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val device = result.device
             val name = try { device.name } catch (e: SecurityException) { null }
-
-            // Éviter les doublons
             if (scannedDevices.none { it.macAddress == device.address }) {
                 val bulb = Bulb(
                     macAddress = device.address,
                     name = name ?: "Ampoule ${device.address.takeLast(5)}",
-                    type = BulbGattProfile.detectType(name ?: "", result),
+                    type = BulbType.GENERIC
                 )
                 scannedDevices.add(bulb)
                 _scanResults.value = scannedDevices.toList()
-                Log.d(TAG, "Appareil détecté : ${bulb.name} (${bulb.macAddress}) RSSI=${result.rssi}")
             }
         }
-
         override fun onScanFailed(errorCode: Int) {
-            Log.e(TAG, "Échec du scan BLE — code : $errorCode")
             _isScanning.value = false
         }
     }
 
-    // ════════════════════════════════════════════════════════════
-    // CONNEXION / DÉCONNEXION
-    // ════════════════════════════════════════════════════════════
+    // ════════════════════════════
+    // CONNEXION
+    // ════════════════════════════
 
-    /**
-     * Connecte une ampoule via GATT.
-     * @param bulb L'ampoule à connecter
-     * @param onResult Callback (succès/erreur)
-     */
-    fun connect(bulb: Bulb, onResult: (success: Boolean) -> Unit = {}) {
-        if (gattConnections.containsKey(bulb.macAddress)) {
-            Log.d(TAG, "${bulb.name} déjà connectée")
-            onResult(true)
-            return
-        }
-
+    fun connect(bulb: Bulb, onResult: (Boolean) -> Unit = {}) {
+        if (gattConnections.containsKey(bulb.macAddress)) { onResult(true); return }
         updateBulbState(bulb.macAddress, ConnectionState.CONNECTING)
-
         val device = try {
             bluetoothAdapter?.getRemoteDevice(bulb.macAddress)
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Permission manquante pour connecter ${bulb.macAddress}")
-            onResult(false)
-            return
-        } ?: run {
-            onResult(false)
-            return
-        }
-
+        } catch (e: SecurityException) { onResult(false); return } ?: run { onResult(false); return }
         try {
-            val gatt = device.connectGatt(
-                context,
-                false,  // autoConnect = false pour connexion rapide
-                createGattCallback(bulb.macAddress, onResult),
-                BluetoothDevice.TRANSPORT_LE
-            )
+            val gatt = device.connectGatt(context, false, createGattCallback(bulb, onResult), BluetoothDevice.TRANSPORT_LE)
             gattConnections[bulb.macAddress] = gatt
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Erreur de connexion GATT : ${e.message}")
-            onResult(false)
-        }
+        } catch (e: SecurityException) { onResult(false) }
     }
 
-    /** Déconnecte une ampoule proprement. */
     fun disconnect(macAddress: String) {
         gattConnections[macAddress]?.let { gatt ->
-            try {
-                gatt.disconnect()
-                gatt.close()
-            } catch (e: SecurityException) {
-                Log.e(TAG, "Erreur déconnexion : ${e.message}")
-            }
+            try { gatt.disconnect(); gatt.close() } catch (e: SecurityException) {}
             gattConnections.remove(macAddress)
         }
         updateBulbState(macAddress, ConnectionState.DISCONNECTED)
-        Log.d(TAG, "Déconnexion de $macAddress")
     }
 
-    /** Déconnecte toutes les ampoules. */
-    fun disconnectAll() {
-        gattConnections.keys.toList().forEach { disconnect(it) }
-    }
+    fun disconnectAll() = gattConnections.keys.toList().forEach { disconnect(it) }
 
-    // ════════════════════════════════════════════════════════════
-    // COMMANDES
-    // ════════════════════════════════════════════════════════════
+    // ════════════════════════════
+    // COMMANDES HUE
+    // ════════════════════════════
 
-    /**
-     * Allume ou éteint une ampoule.
-     */
     fun setPower(macAddress: String, on: Boolean) {
-        val command = if (on)
-            byteArrayOf(0xCC.toByte(), 0x23.toByte(), 0x33.toByte())
-        else
-            byteArrayOf(0xCC.toByte(), 0x24.toByte(), 0x33.toByte())
-        sendCommand(macAddress, command)
+        val gatt = gattConnections[macAddress] ?: return
+        val service = gatt.getService(HUE_SERVICE_UUID) ?: return
+        val char = service.getCharacteristic(HUE_POWER_UUID) ?: return
+        try {
+            @Suppress("DEPRECATION")
+            char.value = if (on) byteArrayOf(0x01) else byteArrayOf(0x00)
+            @Suppress("DEPRECATION")
+            gatt.writeCharacteristic(char)
+        } catch (e: SecurityException) {}
         Log.d(TAG, "Power ${if (on) "ON" else "OFF"} → $macAddress")
     }
 
-    /**
-     * Règle la couleur RVB d'une ampoule.
-     * @param r Rouge (0–255)
-     * @param g Vert (0–255)
-     * @param b Bleu (0–255)
-     */
     fun setColor(macAddress: String, r: Int, g: Int, b: Int) {
-        val profile = BulbGattProfile.profileFor(macAddress)
-        val command = profile.buildColorCommand(r, g, b, 0)
-        sendCommand(macAddress, command)
+        val gatt = gattConnections[macAddress] ?: return
+        val service = gatt.getService(HUE_SERVICE_UUID) ?: return
+        val char = service.getCharacteristic(HUE_COLOR_UUID) ?: return
+        val (x, y) = rgbToXY(r, g, b)
+        val xInt = (x * 65535).toInt()
+        val yInt = (y * 65535).toInt()
+        val data = byteArrayOf(
+            (xInt and 0xFF).toByte(),
+            ((xInt shr 8) and 0xFF).toByte(),
+            (yInt and 0xFF).toByte(),
+            ((yInt shr 8) and 0xFF).toByte()
+        )
+        try {
+            @Suppress("DEPRECATION")
+            char.value = data
+            @Suppress("DEPRECATION")
+            gatt.writeCharacteristic(char)
+        } catch (e: SecurityException) {}
         Log.d(TAG, "Couleur ($r,$g,$b) → $macAddress")
     }
 
-    /**
-     * Règle la luminosité.
-     * @param brightness 0–100 (pourcentage)
-     */
     fun setBrightness(macAddress: String, brightness: Int) {
-        val bVal = (brightness * 255 / 100).coerceIn(0, 255)
-        val command = byteArrayOf(
-            0x56.toByte(), 0x00, 0x00, 0x00,
-            bVal.toByte(), 0x0F.toByte(), 0xAA.toByte()
-        )
-        sendCommand(macAddress, command)
+        val gatt = gattConnections[macAddress] ?: return
+        val service = gatt.getService(HUE_SERVICE_UUID) ?: return
+        val char = service.getCharacteristic(HUE_BRIGHT_UUID) ?: return
+        val bVal = (brightness * 254 / 100).coerceIn(1, 254)
+        try {
+            @Suppress("DEPRECATION")
+            char.value = byteArrayOf(bVal.toByte())
+            @Suppress("DEPRECATION")
+            gatt.writeCharacteristic(char)
+        } catch (e: SecurityException) {}
         Log.d(TAG, "Luminosité $brightness% → $macAddress")
     }
 
-    /**
-     * Envoie une commande à toutes les ampoules connectées (broadcast).
-     */
     fun broadcastCommand(r: Int, g: Int, b: Int, brightness: Int, on: Boolean) {
-        val macs = gattConnections.keys.toList()
-        macs.forEach { mac ->
-            if (on) {
-                setPower(mac, true)
-                setColor(mac, r, g, b)
-                setBrightness(mac, brightness)
-            } else {
-                setPower(mac, false)
-            }
+        gattConnections.keys.toList().forEach { mac ->
+            setPower(mac, on)
+            if (on) { setColor(mac, r, g, b); setBrightness(mac, brightness) }
         }
-        Log.d(TAG, "Broadcast → ${macs.size} ampoule(s)")
     }
 
-    /**
-     * Active un effet dynamique sur une ampoule.
-     * Les effets sont simulés côté app (envoi de commandes périodiques).
-     */
-    fun startEffect(macAddress: String, effect: com.lumicontrol.models.LightEffect, speedMs: Long = 500) {
+    fun startEffect(macAddress: String, effect: LightEffect, speedMs: Long = 500) {
         scope.launch {
             when (effect) {
-                com.lumicontrol.models.LightEffect.FADE -> fadeEffect(macAddress, speedMs)
-                com.lumicontrol.models.LightEffect.STROBE -> strobeEffect(macAddress, speedMs)
-                com.lumicontrol.models.LightEffect.COLOR_CYCLE -> colorCycleEffect(macAddress, speedMs)
-                com.lumicontrol.models.LightEffect.BREATHING -> breathingEffect(macAddress, speedMs)
+                LightEffect.FADE        -> fadeEffect(macAddress, speedMs)
+                LightEffect.STROBE      -> strobeEffect(macAddress, speedMs)
+                LightEffect.COLOR_CYCLE -> colorCycleEffect(macAddress, speedMs)
+                LightEffect.BREATHING   -> breathingEffect(macAddress, speedMs)
                 else -> Unit
             }
         }
     }
 
-    // ─── Effets internes ───
-
     private suspend fun fadeEffect(mac: String, stepMs: Long) {
-        var brightness = 100
-        var direction = -1
+        var brightness = 100; var direction = -1
         while (gattConnections.containsKey(mac)) {
             setBrightness(mac, brightness)
             brightness += direction * 5
@@ -312,9 +212,7 @@ class BleManager private constructor(private val context: Context) {
     private suspend fun strobeEffect(mac: String, stepMs: Long) {
         var on = true
         while (gattConnections.containsKey(mac)) {
-            setPower(mac, on)
-            on = !on
-            delay(stepMs)
+            setPower(mac, on); on = !on; delay(stepMs)
         }
     }
 
@@ -322,19 +220,14 @@ class BleManager private constructor(private val context: Context) {
         var hue = 0f
         while (gattConnections.containsKey(mac)) {
             val color = android.graphics.Color.HSVToColor(floatArrayOf(hue, 1f, 1f))
-            setColor(mac,
-                android.graphics.Color.red(color),
-                android.graphics.Color.green(color),
-                android.graphics.Color.blue(color)
-            )
+            setColor(mac, android.graphics.Color.red(color), android.graphics.Color.green(color), android.graphics.Color.blue(color))
             hue = (hue + 2f) % 360f
             delay(stepMs)
         }
     }
 
     private suspend fun breathingEffect(mac: String, stepMs: Long) {
-        var brightness = 0
-        var direction = 1
+        var brightness = 0; var direction = 1
         while (gattConnections.containsKey(mac)) {
             setBrightness(mac, brightness)
             brightness += direction * 3
@@ -344,97 +237,58 @@ class BleManager private constructor(private val context: Context) {
         }
     }
 
-    // ════════════════════════════════════════════════════════════
+    // ════════════════════════════
     // GATT CALLBACK
-    // ════════════════════════════════════════════════════════════
+    // ════════════════════════════
 
-    private fun createGattCallback(mac: String, onConnect: (Boolean) -> Unit) =
+    private fun createGattCallback(bulb: Bulb, onConnect: (Boolean) -> Unit) =
         object : BluetoothGattCallback() {
-
             override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                 when (newState) {
                     BluetoothProfile.STATE_CONNECTED -> {
-                        Log.d(TAG, "GATT connecté : $mac")
-                        updateBulbState(mac, ConnectionState.CONNECTED)
+                        updateBulbState(bulb.macAddress, ConnectionState.CONNECTED)
+                        val current = _connectedBulbs.value.toMutableList()
+                        if (current.none { it.macAddress == bulb.macAddress }) current.add(bulb)
+                        _connectedBulbs.value = current
                         try { gatt.discoverServices() } catch (e: SecurityException) {}
                     }
                     BluetoothProfile.STATE_DISCONNECTED -> {
-                        Log.d(TAG, "GATT déconnecté : $mac")
-                        updateBulbState(mac, ConnectionState.DISCONNECTED)
-                        gattConnections.remove(mac)
+                        updateBulbState(bulb.macAddress, ConnectionState.DISCONNECTED)
+                        gattConnections.remove(bulb.macAddress)
                         try { gatt.close() } catch (e: SecurityException) {}
                         onConnect(false)
                     }
                 }
             }
-
             override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    Log.d(TAG, "Services découverts pour $mac")
-                    onConnect(true)
-                    // Allumer par défaut après connexion
-                    mainHandler.postDelayed({ setPower(mac, true) }, 500)
-                } else {
-                    Log.w(TAG, "Découverte services échouée pour $mac")
-                    onConnect(false)
-                }
-            }
-
-            override fun onCharacteristicWrite(
-                gatt: BluetoothGatt,
-                characteristic: BluetoothGattCharacteristic,
-                status: Int
-            ) {
-                if (status != BluetoothGatt.GATT_SUCCESS) {
-                    Log.w(TAG, "Écriture GATT échouée sur $mac — status=$status")
-                }
+                if (status == BluetoothGatt.GATT_SUCCESS) onConnect(true)
+                else onConnect(false)
             }
         }
 
-    // ════════════════════════════════════════════════════════════
-    // UTILITAIRES INTERNES
-    // ════════════════════════════════════════════════════════════
+    // ════════════════════════════
+    // UTILITAIRES
+    // ════════════════════════════
 
-    /** Envoie une commande brute à une ampoule via GATT. */
-    private fun sendCommand(macAddress: String, data: ByteArray) {
-        val gatt = gattConnections[macAddress] ?: run {
-            Log.w(TAG, "Tentative d'envoi sans connexion active : $macAddress")
-            return
-        }
-
-        val service = gatt.getService(SERVICE_UUID) ?: run {
-            Log.w(TAG, "Service UUID introuvable pour $macAddress")
-            return
-        }
-
-        val characteristic = service.getCharacteristic(COLOR_CHAR_UUID) ?: run {
-            Log.w(TAG, "Caractéristique couleur introuvable pour $macAddress")
-            return
-        }
-
-        try {
-            @Suppress("DEPRECATION")
-            characteristic.value = data
-            @Suppress("DEPRECATION")
-            gatt.writeCharacteristic(characteristic)
-        } catch (e: SecurityException) {
-            Log.e(TAG, "Permission refusée pour écriture GATT : ${e.message}")
-        }
+    private fun rgbToXY(r: Int, g: Int, b: Int): Pair<Float, Float> {
+        var red = r / 255f; var green = g / 255f; var blue = b / 255f
+        red   = if (red   > 0.04045f) Math.pow(((red   + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else red   / 12.92f
+        green = if (green > 0.04045f) Math.pow(((green + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else green / 12.92f
+        blue  = if (blue  > 0.04045f) Math.pow(((blue  + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else blue  / 12.92f
+        val X = red * 0.664511f + green * 0.154324f + blue * 0.162028f
+        val Y = red * 0.283881f + green * 0.668433f + blue * 0.047685f
+        val Z = red * 0.000088f + green * 0.072310f + blue * 0.986039f
+        val sum = X + Y + Z
+        if (sum == 0f) return Pair(0f, 0f)
+        return Pair(X / sum, Y / sum)
     }
 
-    /** Met à jour l'état d'une ampoule dans la liste connectée. */
     private fun updateBulbState(macAddress: String, state: ConnectionState) {
         val current = _connectedBulbs.value.toMutableList()
         val idx = current.indexOfFirst { it.macAddress == macAddress }
-        if (idx >= 0) {
-            current[idx] = current[idx].copy().also { it.connectionState = state }
-        }
+        if (idx >= 0) current[idx] = current[idx].copy().also { it.connectionState = state }
         _connectedBulbs.value = current
     }
 
-    /** Libère toutes les ressources. */
-    fun release() {
-        disconnectAll()
-        scope.cancel()
-    }
+    fun release() { disconnectAll(); scope.cancel() }
 }
