@@ -1,8 +1,6 @@
 package com.lumicontrol.ui.activities
 
 import android.Manifest
-import android.bluetooth.BluetoothAdapter
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.AudioFormat
 import android.media.AudioRecord
@@ -113,7 +111,9 @@ class MainActivity : AppCompatActivity() {
         seekBrightness.max = 254
         seekBrightness.progress = 254
         seekBrightness.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(s: SeekBar, p: Int, fromUser: Boolean) { if (fromUser) hue.setBrightness(p) }
+            override fun onProgressChanged(s: SeekBar, p: Int, fromUser: Boolean) {
+                if (fromUser) hue.setBrightness(p)
+            }
             override fun onStartTrackingTouch(s: SeekBar) {}
             override fun onStopTrackingTouch(s: SeekBar) {}
         })
@@ -122,7 +122,9 @@ class MainActivity : AppCompatActivity() {
             override fun onProgressChanged(s: SeekBar, p: Int, fromUser: Boolean) {
                 if (fromUser) {
                     stopEffect()
-                    val r = seekRed.progress; val g = seekGreen.progress; val b = seekBlue.progress
+                    val r = seekRed.progress
+                    val g = seekGreen.progress
+                    val b = seekBlue.progress
                     hue.setColor(r, g, b)
                     viewColor.setBackgroundColor(android.graphics.Color.rgb(r, g, b))
                 }
@@ -148,31 +150,48 @@ class MainActivity : AppCompatActivity() {
     }
 
     // ══════════════════════════════════════════
-    // PANEL BALTIMORE — SCANNER IR
+    // PANEL BALTIMORE
     // ══════════════════════════════════════════
 
     private fun setupBaltimorePanel() {
         val buttons = mapOf(
-            R.id.balOn      to "on",    R.id.balOff     to "off",
-            R.id.balBrightP to "brightp", R.id.balBrightM to "brightm",
-            R.id.balRed     to "red",   R.id.balGreen   to "green",
-            R.id.balBlue    to "blue",  R.id.balWhite   to "white",
-            R.id.balOrange  to "orange", R.id.balLime   to "lime",
-            R.id.balCyan    to "cyan",  R.id.balWarmW   to "warmw",
-            R.id.balMode    to "mode",  R.id.balNight   to "night",
-            R.id.balSpeedP  to "speedp", R.id.balSpeedM to "speedm"
+            R.id.balOn      to "on",
+            R.id.balOff     to "off",
+            R.id.balBrightP to "brightp",
+            R.id.balBrightM to "brightm",
+            R.id.balRed     to "red",
+            R.id.balGreen   to "green",
+            R.id.balBlue    to "blue",
+            R.id.balWhite   to "white",
+            R.id.balOrange  to "orange",
+            R.id.balLime    to "lime",
+            R.id.balCyan    to "cyan",
+            R.id.balWarmW   to "warmw",
+            R.id.balPink    to "pink",
+            R.id.balPurple  to "purple",
+            R.id.balYellow  to "yellow",
+            R.id.balMode    to "mode",
+            R.id.balNight   to "night",
+            R.id.balSpeedP  to "speedp",
+            R.id.balSpeedM  to "speedm",
+            R.id.balFlash   to "flash",
+            R.id.balStrobe  to "strobe",
+            R.id.balFade    to "fade",
+            R.id.balSmooth  to "smooth",
+            R.id.balMusic1  to "music1",
+            R.id.balMusic2  to "music2",
+            R.id.balMusic3  to "music3",
+            R.id.balMusic4  to "music4",
+            R.id.balTimer1  to "timer1",
+            R.id.balTimer2  to "timer2",
+            R.id.balTimer3  to "timer3",
+            R.id.balTimer4  to "timer4"
         )
 
         buttons.forEach { (id, key) ->
             findViewById<Button>(id).setOnClickListener {
-                val code = ir.getBalCode(key)
-                if (code != 0) ir.send(code)
-                else {
-                    scanningFor = key
-                    tvStatus.text = "⚠️ Pas de code pour ce bouton !\nAppuie sur Scanner IR d'abord"
-                }
+                sendBalCode(key)
             }
-            // Long press pour scanner ce bouton spécifique
             findViewById<Button>(id).setOnLongClickListener {
                 scanningFor = key
                 startBaltimoreScan()
@@ -184,13 +203,24 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.balScanStop).setOnClickListener { stopBaltimoreScan() }
     }
 
+    private fun sendBalCode(key: String) {
+        val code = ir.getBalCode(key)
+        if (code != 0) ir.send(code)
+        else {
+            scanningFor = key
+            tvStatus.text = "⚠️ Maintiens appuyé ce bouton pour le programmer !"
+        }
+    }
+
     private fun startBaltimoreScan() {
         scanJob?.cancel()
         tvStatus.text = "🔍 Scanner IR pour '$scanningFor'\nQuand la lampe réagit → STOP !"
         scanJob = hue.scope.launch {
             for (code in ir.irScanCodes()) {
                 lastScannedCode = code
-                runOnUiThread { tvStatus.text = "📡 Test: 0x${code.toString(16).uppercase()}" }
+                runOnUiThread {
+                    tvStatus.text = "📡 Test: 0x${code.toString(16).uppercase()}"
+                }
                 ir.send(code)
                 delay(1000)
             }
@@ -265,8 +295,13 @@ class MainActivity : AppCompatActivity() {
             var hueVal = 0f
             while (isActive) {
                 val c = android.graphics.Color.HSVToColor(floatArrayOf(hueVal, 1f, 1f))
-                hue.setColor(android.graphics.Color.red(c), android.graphics.Color.green(c), android.graphics.Color.blue(c))
-                hueVal = (hueVal + 2f) % 360f; delay(80)
+                hue.setColor(
+                    android.graphics.Color.red(c),
+                    android.graphics.Color.green(c),
+                    android.graphics.Color.blue(c)
+                )
+                hueVal = (hueVal + 2f) % 360f
+                delay(80)
             }
         }
     }
@@ -287,10 +322,13 @@ class MainActivity : AppCompatActivity() {
         stopEffect(); tvStatus.text = "⛈️ Éclair"
         effectJob = hue.scope.launch {
             while (isActive) {
-                hue.setColor(255, 255, 255); hue.setBrightness(254)
+                hue.setColor(255, 255, 255)
+                hue.setBrightness(254)
                 delay((30..100).random().toLong())
-                hue.setPower(false); delay((50..200).random().toLong())
-                hue.setPower(true); delay((1000..4000).random().toLong())
+                hue.setPower(false)
+                delay((50..200).random().toLong())
+                hue.setPower(true)
+                delay((1000..4000).random().toLong())
             }
         }
     }
@@ -311,11 +349,15 @@ class MainActivity : AppCompatActivity() {
         effectJob = hue.scope.launch {
             while (isActive) {
                 hue.setColor(255, 0, 0); delay(150)
-                hue.setPower(false); delay(80); hue.setPower(true); delay(150)
-                hue.setPower(false); delay(80); hue.setPower(true); delay(200)
+                hue.setPower(false); delay(80)
+                hue.setPower(true); delay(150)
+                hue.setPower(false); delay(80)
+                hue.setPower(true); delay(200)
                 hue.setColor(0, 0, 255); delay(150)
-                hue.setPower(false); delay(80); hue.setPower(true); delay(150)
-                hue.setPower(false); delay(80); hue.setPower(true); delay(200)
+                hue.setPower(false); delay(80)
+                hue.setPower(true); delay(150)
+                hue.setPower(false); delay(80)
+                hue.setPower(true); delay(200)
             }
         }
     }
@@ -345,11 +387,18 @@ class MainActivity : AppCompatActivity() {
         stopEffect(); stopMusicSync()
         tvStatus.text = "🎵 Sync musique ON"
         musicJob = hue.scope.launch {
-            val bufSize = AudioRecord.getMinBufferSize(44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT) * 2
+            val bufSize = AudioRecord.getMinBufferSize(
+                44100,
+                AudioFormat.CHANNEL_IN_MONO,
+                AudioFormat.ENCODING_PCM_16BIT
+            ) * 2
             var ar: AudioRecord? = null
             try {
-                ar = AudioRecord(MediaRecorder.AudioSource.MIC, 44100,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufSize)
+                ar = AudioRecord(
+                    MediaRecorder.AudioSource.MIC, 44100,
+                    AudioFormat.CHANNEL_IN_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT, bufSize
+                )
                 ar.startRecording()
                 val buf = ShortArray(bufSize)
                 var smoothed = 0f
@@ -357,10 +406,11 @@ class MainActivity : AppCompatActivity() {
                     val read = ar.read(buf, 0, bufSize)
                     if (read > 0) {
                         var sum = 0.0
-                        for (i in 0 until read) { val s = buf[i] / 32768f; sum += s * s }
+                        for (i in 0 until read) {
+                            val s = buf[i] / 32768f; sum += s * s
+                        }
                         val rms = sqrt(sum / read).toFloat().coerceIn(0f, 1f)
                         smoothed = 0.3f * smoothed + 0.7f * rms
-                        // Luminosité max + couleur selon intensité
                         hue.setBrightness(254)
                         val (r, g, b) = when {
                             smoothed < 0.15f -> Triple(0, 50, 255)
@@ -375,7 +425,9 @@ class MainActivity : AppCompatActivity() {
                 }
             } catch (e: SecurityException) {
                 runOnUiThread { tvStatus.text = "❌ Permission micro refusée" }
-            } finally { ar?.stop(); ar?.release() }
+            } finally {
+                ar?.stop(); ar?.release()
+            }
         }
     }
 
