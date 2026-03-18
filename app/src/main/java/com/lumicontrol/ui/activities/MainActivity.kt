@@ -466,4 +466,48 @@ class MainActivity : AppCompatActivity() {
                 delay(50)
             }
             ar.stop(); ar.release()
-   
+            mediaProjection?.stop()
+        }
+    }
+
+    private fun stopMusicSync() {
+        musicJob?.cancel(); musicJob = null
+        mediaProjection?.stop()
+        mediaProjection = null
+        tvStatus.text = "🎵 Sync musique OFF"
+    }
+
+    // ══════════════════════════════════════════
+    // PERMISSIONS
+    // ══════════════════════════════════════════
+
+    private fun checkPermissionsAndScan() {
+        val perms = mutableListOf<String>()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            perms.add(Manifest.permission.BLUETOOTH_SCAN)
+            perms.add(Manifest.permission.BLUETOOTH_CONNECT)
+        } else {
+            perms.add(Manifest.permission.BLUETOOTH)
+            perms.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        perms.add(Manifest.permission.RECORD_AUDIO)
+        val missing = perms.filter {
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+        if (missing.isNotEmpty()) permissionLauncher.launch(missing.toTypedArray())
+        else hue.scan()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopEffect(); stopMusicSync(); scanJob?.cancel()
+        hue.release()
+    }
+}
+
+class ScanActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        finish()
+    }
+}   
