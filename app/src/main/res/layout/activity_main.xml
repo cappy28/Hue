@@ -1,151 +1,299 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     android:background="#0d0d1a">
 
-    <LinearLayout
+    <!-- Titre -->
+    <TextView
+        android:text="💡 LumiControl"
+        android:textSize="24sp"
+        android:textColor="#FF6B35"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="12dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
+    <!-- Status -->
+    <TextView
+        android:id="@+id/tvStatus"
+        android:text="Prêt"
+        android:textColor="#AAAAAA"
+        android:textSize="13sp"
+        android:gravity="center"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingBottom="8dp"/>
 
-        <!-- Titre -->
-        <TextView
-            android:text="💡 LumiControl"
-            android:textSize="28sp"
-            android:textColor="#FF6B35"
+    <!-- ONGLETS -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal">
+        <TextView android:id="@+id/tabHue"
+            android:text="💡 Hue"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
             android:textStyle="bold"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#FF6B35"/>
+        <TextView android:id="@+id/tabBaltimore"
+            android:text="🔲 Baltimore"
+            android:textColor="#FFFFFF"
             android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"/>
-
-        <!-- Status -->
-        <TextView
-            android:id="@+id/tvStatus"
-            android:text="Appuie sur Scanner"
-            android:textColor="#AAAAAA"
-            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#333355"/>
+        <TextView android:id="@+id/tabWallLight"
+            android:text="🎨 Wall Light"
+            android:textColor="#FFFFFF"
             android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"/>
-
-        <!-- Aperçu couleur -->
-        <View
-            android:id="@+id/viewColor"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:background="#FF6B35"
-            android:layout_marginBottom="16dp"/>
-
-        <!-- Connexion -->
-        <Button android:id="@+id/btnScan"
-            android:text="🔍 Scanner l'ampoule"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_marginBottom="8dp"
-            android:backgroundTint="#FF6B35"/>
-
-        <!-- ON / OFF -->
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="16dp">
-            <Button android:id="@+id/btnOn"
-                android:text="☀️ ON"
-                android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="1"
-                android:layout_marginEnd="8dp" android:backgroundTint="#FFD700"/>
-            <Button android:id="@+id/btnOff"
-                android:text="🌙 OFF"
-                android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="1"
-                android:backgroundTint="#333355"/>
-        </LinearLayout>
-
-        <!-- Luminosité -->
-        <TextView android:text="☀️ Luminosité" android:textColor="#FFFFFF"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <SeekBar android:id="@+id/seekBrightness"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" android:max="254"/>
-
-        <!-- RGB Sliders -->
-        <TextView android:text="🎨 Couleur RGB" android:textColor="#FFFFFF"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        <SeekBar android:id="@+id/seekRed"
-            android:layout_width="match_parent" android:layout_height="wrap_content" android:max="255"/>
-        <SeekBar android:id="@+id/seekGreen"
-            android:layout_width="match_parent" android:layout_height="wrap_content" android:max="255"/>
-        <SeekBar android:id="@+id/seekBlue"
-            android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp" android:max="255"/>
-
-        <!-- Couleurs rapides -->
-        <TextView android:text="🎨 Couleurs rapides" android:textColor="#FFFFFF"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"/>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="4dp">
-            <Button android:id="@+id/btnRed"    android:text="🔴" android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:backgroundTint="#FF0000"/>
-            <Button android:id="@+id/btnGreen"  android:text="🟢" android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:backgroundTint="#00CC00"/>
-            <Button android:id="@+id/btnBlue"   android:text="🔵" android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:backgroundTint="#0000FF"/>
-            <Button android:id="@+id/btnWhite"  android:text="⚪" android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:backgroundTint="#FFFFFF"/>
-        </LinearLayout>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="16dp">
-            <Button android:id="@+id/btnOrange" android:text="🟠" android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:backgroundTint="#FF6400"/>
-            <Button android:id="@+id/btnPink"   android:text="🩷" android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:backgroundTint="#FF0096"/>
-            <Button android:id="@+id/btnPurple" android:text="🟣" android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:backgroundTint="#8000FF"/>
-        </LinearLayout>
-
-        <!-- Blancs -->
-        <TextView android:text="🌡️ Température blanc" android:textColor="#FFFFFF"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"/>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="16dp">
-            <Button android:id="@+id/btnWarmWhite" android:text="🕯️ Chaud"
-                android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1"
-                android:backgroundTint="#FF8C42"/>
-            <Button android:id="@+id/btnDaylight"  android:text="🌤️ Jour"
-                android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1"
-                android:backgroundTint="#FFF0C0"/>
-            <Button android:id="@+id/btnCoolWhite" android:text="❄️ Froid"
-                android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1"
-                android:backgroundTint="#C0DFFF"/>
-        </LinearLayout>
-
-        <!-- Effets -->
-        <TextView android:text="✨ Effets" android:textColor="#FFFFFF"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"/>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="4dp">
-            <Button android:id="@+id/btnEffectFade"      android:text="🌅 Fondu"      android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp"/>
-            <Button android:id="@+id/btnEffectStrobe"    android:text="⚡ Strobe"     android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp"/>
-            <Button android:id="@+id/btnEffectRainbow"   android:text="🌈 Rainbow"    android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp"/>
-            <Button android:id="@+id/btnEffectBreath"    android:text="💨 Respir"     android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp"/>
-        </LinearLayout>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="4dp">
-            <Button android:id="@+id/btnEffectLightning" android:text="⛈️ Éclair"     android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp"/>
-            <Button android:id="@+id/btnEffectFire"      android:text="🔥 Feu"        android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp"/>
-            <Button android:id="@+id/btnEffectPolice"    android:text="🚨 Police"     android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp"/>
-            <Button android:id="@+id/btnEffectStop"      android:text="⏹️ Stop"       android:layout_width="0dp" android:layout_height="45dp" android:layout_weight="1" android:textSize="11sp" android:backgroundTint="#CC0000"/>
-        </LinearLayout>
-
-        <!-- Sync musique -->
-        <TextView android:text="🎵 Sync Musique/Son" android:textColor="#FFFFFF"
-            android:layout_width="wrap_content" android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp" android:layout_marginTop="8dp"/>
-        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
-            android:orientation="horizontal" android:layout_marginBottom="16dp">
-            <Button android:id="@+id/btnMusicSync" android:text="🎵 Activer"
-                android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="1"
-                android:layout_marginEnd="8dp" android:backgroundTint="#9C27B0"/>
-            <Button android:id="@+id/btnMusicStop" android:text="⏹️ Arrêter"
-                android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="1"
-                android:backgroundTint="#CC0000"/>
-        </LinearLayout>
-
+            android:textStyle="bold"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#333355"/>
     </LinearLayout>
-</ScrollView>
+
+    <!-- CONTENU SCROLLABLE -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <!-- ═══════════════ PANEL HUE ═══════════════ -->
+            <LinearLayout android:id="@+id/panelHue"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Aperçu couleur -->
+                <View android:id="@+id/viewColor"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:background="#FF6B35"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- Connexion -->
+                <Button android:id="@+id/btnScan"
+                    android:text="🔍 Scanner Hue"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:backgroundTint="#FF6B35"
+                    android:layout_marginBottom="8dp"/>
+
+                <!-- ON OFF -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="12dp">
+                    <Button android:id="@+id/btnHueOn"
+                        android:text="☀️ ON"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#FFD700"/>
+                    <Button android:id="@+id/btnHueOff"
+                        android:text="🌙 OFF"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:backgroundTint="#222244"/>
+                </LinearLayout>
+
+                <!-- Luminosité -->
+                <TextView android:text="☀️ Luminosité" android:textColor="#CCCCCC"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <SeekBar android:id="@+id/seekBrightness"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp" android:max="254"/>
+
+                <!-- RGB -->
+                <TextView android:text="🎨 Rouge / Vert / Bleu" android:textColor="#CCCCCC"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <SeekBar android:id="@+id/seekRed"
+                    android:layout_width="match_parent" android:layout_height="wrap_content" android:max="255"/>
+                <SeekBar android:id="@+id/seekGreen"
+                    android:layout_width="match_parent" android:layout_height="wrap_content" android:max="255"/>
+                <SeekBar android:id="@+id/seekBlue"
+                    android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp" android:max="255"/>
+
+                <!-- Couleurs rapides ligne 1 -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="4dp">
+                    <Button android:id="@+id/hueRed"    android:text="🔴" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FF0000"/>
+                    <Button android:id="@+id/hueGreen"  android:text="🟢" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#00CC00"/>
+                    <Button android:id="@+id/hueBlue"   android:text="🔵" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#0044FF"/>
+                    <Button android:id="@+id/hueWhite"  android:text="⚪" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#DDDDDD"/>
+                </LinearLayout>
+                <!-- Couleurs rapides ligne 2 -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="12dp">
+                    <Button android:id="@+id/hueOrange" android:text="🟠" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FF6400"/>
+                    <Button android:id="@+id/huePink"   android:text="🩷" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FF0096"/>
+                    <Button android:id="@+id/huePurple" android:text="🟣" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#7700FF"/>
+                    <Button android:id="@+id/hueYellow" android:text="🟡" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FFCC00"/>
+                </LinearLayout>
+
+                <!-- Blancs -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="12dp">
+                    <Button android:id="@+id/hueWarm" android:text="🕯️ Chaud"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FF8C42"/>
+                    <Button android:id="@+id/hueDay"  android:text="🌤️ Jour"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FFEEAA"/>
+                    <Button android:id="@+id/hueCool" android:text="❄️ Froid"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#AACCFF"/>
+                </LinearLayout>
+
+                <!-- Effets ligne 1 -->
+                <TextView android:text="✨ Effets" android:textColor="#CCCCCC"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="4dp">
+                    <Button android:id="@+id/hueFade"      android:text="🌅" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/hueStrobe"    android:text="⚡" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/hueRainbow"   android:text="🌈" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/hueBreath"    android:text="💨" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                </LinearLayout>
+                <!-- Effets ligne 2 -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="12dp">
+                    <Button android:id="@+id/hueLightning" android:text="⛈️" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/hueFire"      android:text="🔥" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/huePolice"    android:text="🚨" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/hueParty"     android:text="🎉" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#334"/>
+                </LinearLayout>
+                <Button android:id="@+id/hueStop"
+                    android:text="⏹️ Arrêter effet"
+                    android:layout_width="match_parent" android:layout_height="44dp"
+                    android:backgroundTint="#CC0000" android:layout_marginBottom="12dp"/>
+
+                <!-- Sync musique -->
+                <TextView android:text="🎵 Sync Musique" android:textColor="#CCCCCC"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"/>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="12dp">
+                    <Button android:id="@+id/hueMusicOn"  android:text="🎵 Activer"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#9C27B0"/>
+                    <Button android:id="@+id/hueMusicOff" android:text="⏹️ Stop"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:backgroundTint="#CC0000"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══════════════ PANEL BALTIMORE IR ═══════════════ -->
+            <LinearLayout android:id="@+id/panelBaltimore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView android:text="🔲 Baltimore Panel Light — IR"
+                    android:textColor="#FF6B35" android:textStyle="bold" android:textSize="16sp"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- ON OFF -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+                    <Button android:id="@+id/balOn"  android:text="☀️ ON"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#FFD700"/>
+                    <Button android:id="@+id/balOff" android:text="🌙 OFF"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:backgroundTint="#222244"/>
+                </LinearLayout>
+
+                <!-- Luminosité -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+                    <Button android:id="@+id/balBrightP" android:text="☀️+"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#555577"/>
+                    <Button android:id="@+id/balBrightM" android:text="☀️-"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:backgroundTint="#555577"/>
+                </LinearLayout>
+
+                <!-- Couleurs -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="4dp">
+                    <Button android:id="@+id/balRed"    android:text="🔴" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FF0000"/>
+                    <Button android:id="@+id/balGreen"  android:text="🟢" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#00CC00"/>
+                    <Button android:id="@+id/balBlue"   android:text="🔵" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#0044FF"/>
+                    <Button android:id="@+id/balWhite"  android:text="⚪" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#DDDDDD"/>
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+                    <Button android:id="@+id/balOrange" android:text="🟠" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FF6400"/>
+                    <Button android:id="@+id/balLime"   android:text="🟡" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#AAFF00"/>
+                    <Button android:id="@+id/balCyan"   android:text="🩵" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#00FFFF"/>
+                    <Button android:id="@+id/balWarmW"  android:text="🕯️" android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1" android:backgroundTint="#FF8C42"/>
+                </LinearLayout>
+
+                <!-- Modes -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+                    <Button android:id="@+id/balMode"   android:text="🔄 Mode"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/balNight"  android:text="🌙 Nuit"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/balSpeedP" android:text="⏩+"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#334"/>
+                    <Button android:id="@+id/balSpeedM" android:text="⏩-"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:backgroundTint="#334"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ═══════════════ PANEL WALL LIGHT IR ═══════════════ -->
+            <LinearLayout android:id="@+id/panelWallLight"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView android:text="🎨 Multicolor Wall Light — IR"
+                    android:textColor="#FF6B35" android:textStyle="bold" android:textSize="16sp"
+                    android:layout_width="wrap_content" android:layout_height="wrap_content"
+                    android:layout_marginBottom="12dp"/>
+
+                <!-- ON OFF -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+                    <Button android:id="@+id/wlOn"  android:text="☀️ ON"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#FFD700"/>
+                    <Button android:id="@+id/wlOff" android:text="🌙 OFF"
+                        android:layout_width="0dp" android:layout_height="48dp" android:layout_weight="1"
+                        android:backgroundTint="#222244"/>
+                </LinearLayout>
+
+                <!-- Luminosité -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation="horizontal" android:layout_marginBottom="8dp">
+                    <Button android:id="@+id/wlBrightP" android:text="☀️+"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:layout_marginEnd="6dp" android:backgroundTint="#555577"/>
+                    <Button android:id="@+id/wlBrightM" android:text="☀️-"
+                        android:layout_width="0dp" android:layout_height="44dp" android:layout_weight="1"
+                        android:backgroundTint="#555577"/>
+                </LinearLayout>
+
+                <!-- Couleurs -->
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:orientation
