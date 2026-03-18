@@ -6,6 +6,7 @@ import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanResult
 import android.bluetooth.le.ScanSettings
 import android.content.pm.PackageManager
+import android.hardware.ConsumerIrManager
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -13,6 +14,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -24,74 +26,172 @@ import kotlin.math.sqrt
 
 class MainActivity : AppCompatActivity() {
 
+    // ══════════════════════════════════════════
+    // VARIABLES
+    // ══════════════════════════════════════════
+
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
         (getSystemService(BLUETOOTH_SERVICE) as BluetoothManager).adapter
     }
-
+    private var irManager: ConsumerIrManager? = null
     private var connectedGatt: BluetoothGatt? = null
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var effectJob: Job? = null
     private var musicJob: Job? = null
 
+    // UUIDs Hue
     private val HUE_SERVICE = UUID.fromString("932c32bd-0000-47a2-835a-a8d455b859dd")
     private val HUE_POWER   = UUID.fromString("932c32bd-0002-47a2-835a-a8d455b859dd")
     private val HUE_BRIGHT  = UUID.fromString("932c32bd-0003-47a2-835a-a8d455b859dd")
     private val HUE_COLOR   = UUID.fromString("932c32bd-0005-47a2-835a-a8d455b859dd")
     private val HUE_TEMP    = UUID.fromString("932c32bd-0004-47a2-835a-a8d455b859dd")
 
+    // ══════════════════════════════════════════
+    // CODES IR — BALTIMORE (petite télécommande 24 touches)
+    // NEC protocol 38kHz
+    // ══════════════════════════════════════════
+    private val BAL_ON       = 0xFF30CF
+    private val BAL_OFF      = 0xFFB04F
+    private val BAL_BRIGHT_P = 0xFF3AC5
+    private val BAL_BRIGHT_M = 0xFFBA45
+    private val BAL_RED      = 0xFF906F
+    private val BAL_GREEN    = 0xFF10EF
+    private val BAL_BLUE     = 0xFF50AF
+    private val BAL_WHITE    = 0xFFD02F
+    private val BAL_ORANGE   = 0xFF8877
+    private val BAL_LIME     = 0xFF48B7
+    private val BAL_CYAN     = 0xFF32CD
+    private val BAL_WARMW    = 0xFFE817
+    private val BAL_SPEED_P  = 0xFF20DF
+    private val BAL_SPEED_M  = 0xFFA05F
+    private val BAL_MODE     = 0xFF807F
+    private val BAL_NIGHT    = 0xFF60CF
+
+    // ══════════════════════════════════════════
+    // CODES IR — WALL LIGHT (grande télécommande 44 touches)
+    // ══════════════════════════════════════════
+    private val WL_ON        = 0xFF02FD
+    private val WL_OFF       = 0xFF827D
+    private val WL_BRIGHT_P  = 0xFF3AC5
+    private val WL_BRIGHT_M  = 0xFFBA45
+    private val WL_RED       = 0xFF1AE5
+    private val WL_GREEN     = 0xFF9A65
+    private val WL_BLUE      = 0xFFA25D
+    private val WL_WHITE     = 0xFF22DD
+    private val WL_ORANGE    = 0xFF2AD5
+    private val WL_LIME      = 0xFFAA55
+    private val WL_CYAN      = 0xFF926D
+    private val WL_PINK      = 0xFF12ED
+    private val WL_PURPLE    = 0xFF926D
+    private val WL_FLASH     = 0xFFD02F
+    private val WL_STROBE    = 0xFFC837
+    private val WL_FADE      = 0xFF48B7
+    private val WL_SMOOTH    = 0xFF6897
+    private val WL_SPEED_P   = 0xFF20DF
+    private val WL_SPEED_M   = 0xFFA05F
+    private val WL_MUSIC1    = 0xFF58A7
+    private val WL_MUSIC2    = 0xFFD827
+    private val WL_MUSIC3    = 0xFF788  7
+    private val WL_MUSIC4    = 0xFFF807
+
     private lateinit var tvStatus: TextView
+    private lateinit var tabHue: TextView
+    private lateinit var tabBaltimore: TextView
+    private lateinit var tabWallLight: TextView
+    private lateinit var panelHue: View
+    private lateinit var panelBaltimore: View
+    private lateinit var panelWallLight: View
     private lateinit var seekBrightness: SeekBar
     private lateinit var seekRed: SeekBar
     private lateinit var seekGreen: SeekBar
     private lateinit var seekBlue: SeekBar
-    private lateinit var viewColor: android.view.View
+    private lateinit var viewColor: View
 
     private val permissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { startScan() }
 
+    // ══════════════════════════════════════════
+    // ONCREATE
+    // ══════════════════════════════════════════
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        irManager = getSystemService(CONSUMER_IR_SERVICE) as? ConsumerIrManager
+
         tvStatus       = findViewById(R.id.tvStatus)
+        tabHue         = findViewById(R.id.tabHue)
+        tabBaltimore   = findViewById(R.id.tabBaltimore)
+        tabWallLight   = findViewById(R.id.tabWallLight)
+        panelHue       = findViewById(R.id.panelHue)
+        panelBaltimore = findViewById(R.id.panelBaltimore)
+        panelWallLight = findViewById(R.id.panelWallLight)
         seekBrightness = findViewById(R.id.seekBrightness)
         seekRed        = findViewById(R.id.seekRed)
         seekGreen      = findViewById(R.id.seekGreen)
         seekBlue       = findViewById(R.id.seekBlue)
         viewColor      = findViewById(R.id.viewColor)
 
+        setupTabs()
+        setupHuePanel()
+        setupBaltimorPanel()
+        setupWallLightPanel()
+
+        if (irManager?.hasIrEmitter() == true) {
+            tvStatus.text = "✅ Émetteur IR disponible"
+        } else {
+            tvStatus.text = "⚠️ Pas d'IR détecté"
+        }
+    }
+
+    // ══════════════════════════════════════════
+    // ONGLETS
+    // ══════════════════════════════════════════
+
+    private fun setupTabs() {
+        showPanel(0)
+        tabHue.setOnClickListener { showPanel(0) }
+        tabBaltimore.setOnClickListener { showPanel(1) }
+        tabWallLight.setOnClickListener { showPanel(2) }
+    }
+
+    private fun showPanel(index: Int) {
+        panelHue.visibility       = if (index == 0) View.VISIBLE else View.GONE
+        panelBaltimore.visibility = if (index == 1) View.VISIBLE else View.GONE
+        panelWallLight.visibility = if (index == 2) View.VISIBLE else View.GONE
+
+        val active   = "#FF6B35"
+        val inactive = "#333355"
+        tabHue.setBackgroundColor(android.graphics.Color.parseColor(if (index == 0) active else inactive))
+        tabBaltimore.setBackgroundColor(android.graphics.Color.parseColor(if (index == 1) active else inactive))
+        tabWallLight.setBackgroundColor(android.graphics.Color.parseColor(if (index == 2) active else inactive))
+    }
+
+    // ══════════════════════════════════════════
+    // PANEL HUE BLUETOOTH
+    // ══════════════════════════════════════════
+
+    private fun setupHuePanel() {
         findViewById<Button>(R.id.btnScan).setOnClickListener { checkAndScan() }
-        findViewById<Button>(R.id.btnOn).setOnClickListener { setPower(true) }
-        findViewById<Button>(R.id.btnOff).setOnClickListener { setPower(false) }
+        findViewById<Button>(R.id.btnHueOn).setOnClickListener  { setPower(true) }
+        findViewById<Button>(R.id.btnHueOff).setOnClickListener { setPower(false) }
 
-        // Boutons couleurs rapides
-        findViewById<Button>(R.id.btnRed).setOnClickListener    { stopEffect(); setColor(255, 0, 0) }
-        findViewById<Button>(R.id.btnGreen).setOnClickListener  { stopEffect(); setColor(0, 255, 0) }
-        findViewById<Button>(R.id.btnBlue).setOnClickListener   { stopEffect(); setColor(0, 0, 255) }
-        findViewById<Button>(R.id.btnWhite).setOnClickListener  { stopEffect(); setColor(255, 255, 255) }
-        findViewById<Button>(R.id.btnOrange).setOnClickListener { stopEffect(); setColor(255, 100, 0) }
-        findViewById<Button>(R.id.btnPink).setOnClickListener   { stopEffect(); setColor(255, 0, 150) }
-        findViewById<Button>(R.id.btnPurple).setOnClickListener { stopEffect(); setColor(128, 0, 255) }
+        // Couleurs rapides Hue
+        findViewById<Button>(R.id.hueRed).setOnClickListener    { stopEffect(); setColor(255,0,0) }
+        findViewById<Button>(R.id.hueGreen).setOnClickListener  { stopEffect(); setColor(0,255,0) }
+        findViewById<Button>(R.id.hueBlue).setOnClickListener   { stopEffect(); setColor(0,0,255) }
+        findViewById<Button>(R.id.hueWhite).setOnClickListener  { stopEffect(); setColor(255,255,255) }
+        findViewById<Button>(R.id.hueOrange).setOnClickListener { stopEffect(); setColor(255,100,0) }
+        findViewById<Button>(R.id.huePink).setOnClickListener   { stopEffect(); setColor(255,0,150) }
+        findViewById<Button>(R.id.huePurple).setOnClickListener { stopEffect(); setColor(128,0,255) }
+        findViewById<Button>(R.id.hueYellow).setOnClickListener { stopEffect(); setColor(255,220,0) }
 
-        // Modes blancs
-        findViewById<Button>(R.id.btnWarmWhite).setOnClickListener  { stopEffect(); setTemperature(153) }
-        findViewById<Button>(R.id.btnCoolWhite).setOnClickListener  { stopEffect(); setTemperature(500) }
-        findViewById<Button>(R.id.btnDaylight).setOnClickListener   { stopEffect(); setTemperature(300) }
-
-        // Effets
-        findViewById<Button>(R.id.btnEffectFade).setOnClickListener        { startFade() }
-        findViewById<Button>(R.id.btnEffectStrobe).setOnClickListener      { startStrobe() }
-        findViewById<Button>(R.id.btnEffectRainbow).setOnClickListener     { startRainbow() }
-        findViewById<Button>(R.id.btnEffectBreath).setOnClickListener      { startBreathing() }
-        findViewById<Button>(R.id.btnEffectLightning).setOnClickListener   { startLightning() }
-        findViewById<Button>(R.id.btnEffectFire).setOnClickListener        { startFire() }
-        findViewById<Button>(R.id.btnEffectPolice).setOnClickListener      { startPolice() }
-        findViewById<Button>(R.id.btnEffectStop).setOnClickListener        { stopEffect() }
-
-        // Sync musique
-        findViewById<Button>(R.id.btnMusicSync).setOnClickListener  { startMusicSync() }
-        findViewById<Button>(R.id.btnMusicStop).setOnClickListener  { stopMusicSync() }
+        // Blancs
+        findViewById<Button>(R.id.hueWarm).setOnClickListener  { stopEffect(); setTemperature(500) }
+        findViewById<Button>(R.id.hueDay).setOnClickListener   { stopEffect(); setTemperature(300) }
+        findViewById<Button>(R.id.hueCool).setOnClickListener  { stopEffect(); setTemperature(153) }
 
         // Luminosité
         seekBrightness.max = 254
@@ -104,22 +204,133 @@ class MainActivity : AppCompatActivity() {
             override fun onStopTrackingTouch(s: SeekBar) {}
         })
 
-        // Sliders RGB
-        val colorListener = object : SeekBar.OnSeekBarChangeListener {
+        // RGB sliders
+        val cl = object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(s: SeekBar, p: Int, fromUser: Boolean) {
-                if (fromUser) applyRgbSliders()
+                if (fromUser) {
+                    stopEffect()
+                    val r = seekRed.progress
+                    val g = seekGreen.progress
+                    val b = seekBlue.progress
+                    setColor(r, g, b)
+                    viewColor.setBackgroundColor(android.graphics.Color.rgb(r, g, b))
+                }
             }
             override fun onStartTrackingTouch(s: SeekBar) {}
             override fun onStopTrackingTouch(s: SeekBar) {}
         }
-        seekRed.setOnSeekBarChangeListener(colorListener)
-        seekGreen.setOnSeekBarChangeListener(colorListener)
-        seekBlue.setOnSeekBarChangeListener(colorListener)
+        seekRed.setOnSeekBarChangeListener(cl)
+        seekGreen.setOnSeekBarChangeListener(cl)
+        seekBlue.setOnSeekBarChangeListener(cl)
+
+        // Effets Hue
+        findViewById<Button>(R.id.hueFade).setOnClickListener      { startFade() }
+        findViewById<Button>(R.id.hueStrobe).setOnClickListener    { startStrobe() }
+        findViewById<Button>(R.id.hueRainbow).setOnClickListener   { startRainbow() }
+        findViewById<Button>(R.id.hueBreath).setOnClickListener    { startBreathing() }
+        findViewById<Button>(R.id.hueLightning).setOnClickListener { startLightning() }
+        findViewById<Button>(R.id.hueFire).setOnClickListener      { startFire() }
+        findViewById<Button>(R.id.huePolice).setOnClickListener    { startPolice() }
+        findViewById<Button>(R.id.hueParty).setOnClickListener     { startParty() }
+        findViewById<Button>(R.id.hueStop).setOnClickListener      { stopEffect() }
+
+        // Sync musique
+        findViewById<Button>(R.id.hueMusicOn).setOnClickListener   { startMusicSync() }
+        findViewById<Button>(R.id.hueMusicOff).setOnClickListener  { stopMusicSync() }
     }
 
-    // ════════════════════════════
-    // SCAN & CONNEXION
-    // ════════════════════════════
+    // ══════════════════════════════════════════
+    // PANEL BALTIMORE IR
+    // ══════════════════════════════════════════
+
+    private fun setupBaltimorPanel() {
+        findViewById<Button>(R.id.balOn).setOnClickListener       { sendIR(BAL_ON) }
+        findViewById<Button>(R.id.balOff).setOnClickListener      { sendIR(BAL_OFF) }
+        findViewById<Button>(R.id.balBrightP).setOnClickListener  { sendIR(BAL_BRIGHT_P) }
+        findViewById<Button>(R.id.balBrightM).setOnClickListener  { sendIR(BAL_BRIGHT_M) }
+        findViewById<Button>(R.id.balRed).setOnClickListener      { sendIR(BAL_RED) }
+        findViewById<Button>(R.id.balGreen).setOnClickListener    { sendIR(BAL_GREEN) }
+        findViewById<Button>(R.id.balBlue).setOnClickListener     { sendIR(BAL_BLUE) }
+        findViewById<Button>(R.id.balWhite).setOnClickListener    { sendIR(BAL_WHITE) }
+        findViewById<Button>(R.id.balOrange).setOnClickListener   { sendIR(BAL_ORANGE) }
+        findViewById<Button>(R.id.balLime).setOnClickListener     { sendIR(BAL_LIME) }
+        findViewById<Button>(R.id.balCyan).setOnClickListener     { sendIR(BAL_CYAN) }
+        findViewById<Button>(R.id.balWarmW).setOnClickListener    { sendIR(BAL_WARMW) }
+        findViewById<Button>(R.id.balSpeedP).setOnClickListener   { sendIR(BAL_SPEED_P) }
+        findViewById<Button>(R.id.balSpeedM).setOnClickListener   { sendIR(BAL_SPEED_M) }
+        findViewById<Button>(R.id.balMode).setOnClickListener     { sendIR(BAL_MODE) }
+        findViewById<Button>(R.id.balNight).setOnClickListener    { sendIR(BAL_NIGHT) }
+    }
+
+    // ══════════════════════════════════════════
+    // PANEL WALL LIGHT IR
+    // ══════════════════════════════════════════
+
+    private fun setupWallLightPanel() {
+        findViewById<Button>(R.id.wlOn).setOnClickListener       { sendIR(WL_ON) }
+        findViewById<Button>(R.id.wlOff).setOnClickListener      { sendIR(WL_OFF) }
+        findViewById<Button>(R.id.wlBrightP).setOnClickListener  { sendIR(WL_BRIGHT_P) }
+        findViewById<Button>(R.id.wlBrightM).setOnClickListener  { sendIR(WL_BRIGHT_M) }
+        findViewById<Button>(R.id.wlRed).setOnClickListener      { sendIR(WL_RED) }
+        findViewById<Button>(R.id.wlGreen).setOnClickListener    { sendIR(WL_GREEN) }
+        findViewById<Button>(R.id.wlBlue).setOnClickListener     { sendIR(WL_BLUE) }
+        findViewById<Button>(R.id.wlWhite).setOnClickListener    { sendIR(WL_WHITE) }
+        findViewById<Button>(R.id.wlOrange).setOnClickListener   { sendIR(WL_ORANGE) }
+        findViewById<Button>(R.id.wlLime).setOnClickListener     { sendIR(WL_LIME) }
+        findViewById<Button>(R.id.wlCyan).setOnClickListener     { sendIR(WL_CYAN) }
+        findViewById<Button>(R.id.wlPink).setOnClickListener     { sendIR(WL_PINK) }
+        findViewById<Button>(R.id.wlFlash).setOnClickListener    { sendIR(WL_FLASH) }
+        findViewById<Button>(R.id.wlStrobe).setOnClickListener   { sendIR(WL_STROBE) }
+        findViewById<Button>(R.id.wlFade).setOnClickListener     { sendIR(WL_FADE) }
+        findViewById<Button>(R.id.wlSmooth).setOnClickListener   { sendIR(WL_SMOOTH) }
+        findViewById<Button>(R.id.wlSpeedP).setOnClickListener   { sendIR(WL_SPEED_P) }
+        findViewById<Button>(R.id.wlSpeedM).setOnClickListener   { sendIR(WL_SPEED_M) }
+        findViewById<Button>(R.id.wlMusic1).setOnClickListener   { sendIR(WL_MUSIC1) }
+        findViewById<Button>(R.id.wlMusic2).setOnClickListener   { sendIR(WL_MUSIC2) }
+        findViewById<Button>(R.id.wlMusic3).setOnClickListener   { sendIR(WL_MUSIC3) }
+        findViewById<Button>(R.id.wlMusic4).setOnClickListener   { sendIR(WL_MUSIC4) }
+    }
+
+    // ══════════════════════════════════════════
+    // INFRAROUGE
+    // ══════════════════════════════════════════
+
+    private fun sendIR(code: Int) {
+        if (irManager?.hasIrEmitter() != true) {
+            tvStatus.text = "❌ Pas d'émetteur IR"
+            return
+        }
+        try {
+            irManager?.transmit(38000, necToPulse(code))
+            tvStatus.text = "📡 Signal IR envoyé"
+        } catch (e: Exception) {
+            tvStatus.text = "❌ Erreur IR : ${e.message}"
+        }
+    }
+
+    /**
+     * Convertit un code NEC 32 bits en tableau de pulses microseconde
+     * pour Android ConsumerIrManager
+     */
+    private fun necToPulse(code: Int): IntArray {
+        val pulses = mutableListOf<Int>()
+        // Header
+        pulses.add(9000)
+        pulses.add(4500)
+        // 32 bits MSB first
+        for (i in 31 downTo 0) {
+            pulses.add(562)
+            if ((code shr i) and 1 == 1) pulses.add(1687)
+            else pulses.add(562)
+        }
+        // Stop bit
+        pulses.add(562)
+        return pulses.toIntArray()
+    }
+
+    // ══════════════════════════════════════════
+    // BLUETOOTH HUE
+    // ══════════════════════════════════════════
 
     private fun checkAndScan() {
         val perms = mutableListOf<String>()
@@ -139,7 +350,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun startScan() {
-        tvStatus.text = "🔍 Scan en cours..."
+        tvStatus.text = "🔍 Scan Hue..."
         val scanner = bluetoothAdapter?.bluetoothLeScanner ?: return
         val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
         try {
@@ -149,7 +360,7 @@ class MainActivity : AppCompatActivity() {
                     if (name != null && name.contains("Hue", ignoreCase = true)) {
                         scanner.stopScan(this)
                         runOnUiThread {
-                            tvStatus.text = "Trouvé : $name\nConnexion..."
+                            tvStatus.text = "Trouvé : $name — Connexion..."
                             connectToDevice(result.device)
                         }
                     }
@@ -157,7 +368,8 @@ class MainActivity : AppCompatActivity() {
             })
             Handler(Looper.getMainLooper()).postDelayed({
                 try { scanner.stopScan(object : ScanCallback() {}) } catch (e: Exception) {}
-                if (connectedGatt == null) runOnUiThread { tvStatus.text = "❌ Aucune ampoule Hue trouvée" }
+                if (connectedGatt == null)
+                    runOnUiThread { tvStatus.text = "❌ Aucune ampoule Hue trouvée" }
             }, 10000)
         } catch (e: SecurityException) { tvStatus.text = "Permission refusée" }
     }
@@ -167,26 +379,25 @@ class MainActivity : AppCompatActivity() {
             connectedGatt = device.connectGatt(this, false, object : BluetoothGattCallback() {
                 override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
                     if (newState == BluetoothProfile.STATE_CONNECTED) {
-                        runOnUiThread { tvStatus.text = "✅ Connectée ! Prête à contrôler" }
+                        runOnUiThread { tvStatus.text = "✅ Hue connectée !" }
                         try { gatt.discoverServices() } catch (e: SecurityException) {}
                     } else {
-                        runOnUiThread { tvStatus.text = "❌ Déconnectée" }
+                        runOnUiThread { tvStatus.text = "❌ Hue déconnectée" }
                     }
                 }
                 override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-                    runOnUiThread { tvStatus.text = "✅ Prête !" }
+                    runOnUiThread {
+                        tvStatus.text = "✅ Hue prête !"
+                        setBrightness(254)
+                    }
                 }
             }, BluetoothDevice.TRANSPORT_LE)
         } catch (e: SecurityException) { tvStatus.text = "Erreur connexion" }
     }
 
-    // ════════════════════════════
-    // COMMANDES DE BASE
-    // ════════════════════════════
-
     private fun setPower(on: Boolean) {
         write(HUE_POWER, if (on) byteArrayOf(0x01) else byteArrayOf(0x00))
-        tvStatus.text = if (on) "☀️ Allumée" else "🌙 Éteinte"
+        tvStatus.text = if (on) "☀️ Hue allumée" else "🌙 Hue éteinte"
     }
 
     private fun setBrightness(value: Int) {
@@ -201,215 +412,15 @@ class MainActivity : AppCompatActivity() {
             (xi and 0xFF).toByte(), ((xi shr 8) and 0xFF).toByte(),
             (yi and 0xFF).toByte(), ((yi shr 8) and 0xFF).toByte()
         ))
-        viewColor.setBackgroundColor(android.graphics.Color.rgb(r, g, b))
+        runOnUiThread { viewColor.setBackgroundColor(android.graphics.Color.rgb(r, g, b)) }
     }
 
     private fun setTemperature(mirek: Int) {
-        // Température en mirek (153=froid/6500K, 500=chaud/2000K)
         write(HUE_TEMP, byteArrayOf(
             (mirek and 0xFF).toByte(),
             ((mirek shr 8) and 0xFF).toByte()
         ))
     }
-
-    private fun applyRgbSliders() {
-        stopEffect()
-        setColor(seekRed.progress, seekGreen.progress, seekBlue.progress)
-    }
-
-    // ════════════════════════════
-    // EFFETS
-    // ════════════════════════════
-
-    private fun stopEffect() {
-        effectJob?.cancel()
-        effectJob = null
-    }
-
-    private fun startFade() {
-        stopEffect()
-        tvStatus.text = "🌅 Effet : Fondu"
-        effectJob = scope.launch {
-            var brightness = 254; var dir = -1
-            while (isActive) {
-                setBrightness(brightness)
-                brightness += dir * 8
-                if (brightness <= 5) dir = 1
-                if (brightness >= 254) dir = -1
-                delay(80)
-            }
-        }
-    }
-
-    private fun startStrobe() {
-        stopEffect()
-        tvStatus.text = "⚡ Effet : Stroboscope"
-        effectJob = scope.launch {
-            var on = true
-            while (isActive) {
-                setPower(on); on = !on
-                delay(100)
-            }
-        }
-    }
-
-    private fun startRainbow() {
-        stopEffect()
-        tvStatus.text = "🌈 Effet : Arc-en-ciel"
-        effectJob = scope.launch {
-            var hue = 0f
-            while (isActive) {
-                val color = android.graphics.Color.HSVToColor(floatArrayOf(hue, 1f, 1f))
-                setColor(
-                    android.graphics.Color.red(color),
-                    android.graphics.Color.green(color),
-                    android.graphics.Color.blue(color)
-                )
-                hue = (hue + 3f) % 360f
-                delay(100)
-            }
-        }
-    }
-
-    private fun startBreathing() {
-        stopEffect()
-        tvStatus.text = "💨 Effet : Respiration"
-        effectJob = scope.launch {
-            var brightness = 5; var dir = 1
-            while (isActive) {
-                setBrightness(brightness)
-                brightness += dir * 5
-                if (brightness >= 254) dir = -1
-                if (brightness <= 5) dir = 1
-                delay(50)
-            }
-        }
-    }
-
-    private fun startLightning() {
-        stopEffect()
-        tvStatus.text = "⚡ Effet : Éclair"
-        effectJob = scope.launch {
-            while (isActive) {
-                // Flash blanc intense
-                setColor(255, 255, 255)
-                setBrightness(254)
-                delay((50..150).random().toLong())
-                setPower(false)
-                delay((50..300).random().toLong())
-                setPower(true)
-                // Parfois double flash
-                if ((0..3).random() == 0) {
-                    delay((500..2000).random().toLong())
-                    setColor(255, 255, 255)
-                    delay((30..80).random().toLong())
-                    setPower(false)
-                    delay((30..80).random().toLong())
-                    setPower(true)
-                }
-                delay((1000..4000).random().toLong())
-            }
-        }
-    }
-
-    private fun startFire() {
-        stopEffect()
-        tvStatus.text = "🔥 Effet : Feu"
-        effectJob = scope.launch {
-            while (isActive) {
-                val r = (200..255).random()
-                val g = (30..80).random()
-                val b = 0
-                val bright = (100..254).random()
-                setColor(r, g, b)
-                setBrightness(bright)
-                delay((50..150).random().toLong())
-            }
-        }
-    }
-
-    private fun startPolice() {
-        stopEffect()
-        tvStatus.text = "🚨 Effet : Police"
-        effectJob = scope.launch {
-            while (isActive) {
-                // Rouge
-                setColor(255, 0, 0)
-                delay(150)
-                setPower(false); delay(80)
-                setPower(true); delay(150)
-                setPower(false); delay(80)
-                setPower(true)
-                delay(200)
-                // Bleu
-                setColor(0, 0, 255)
-                delay(150)
-                setPower(false); delay(80)
-                setPower(true); delay(150)
-                setPower(false); delay(80)
-                setPower(true)
-                delay(200)
-            }
-        }
-    }
-
-    // ════════════════════════════
-    // SYNC MUSIQUE
-    // ════════════════════════════
-
-    private fun startMusicSync() {
-        stopEffect()
-        stopMusicSync()
-        tvStatus.text = "🎵 Sync musique active"
-        musicJob = scope.launch {
-            val bufferSize = AudioRecord.getMinBufferSize(
-                44100, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT
-            ) * 2
-            var audioRecord: AudioRecord? = null
-            try {
-                audioRecord = AudioRecord(
-                    MediaRecorder.AudioSource.MIC, 44100,
-                    AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize
-                )
-                audioRecord.startRecording()
-                val buffer = ShortArray(bufferSize)
-                var smoothed = 0f
-                while (isActive) {
-                    val read = audioRecord.read(buffer, 0, bufferSize)
-                    if (read > 0) {
-                        var sum = 0.0
-                        for (i in 0 until read) { val s = buffer[i] / 32768f; sum += s * s }
-                        val rms = sqrt(sum / read).toFloat().coerceIn(0f, 1f)
-                        smoothed = 0.3f * smoothed + 0.7f * rms
-                        val bright = (smoothed * 2f * 254f).toInt().coerceIn(5, 254)
-                        // Couleur selon intensité
-                        val (r, g, b) = when {
-                            smoothed < 0.2f -> Triple(0, 50, 255)
-                            smoothed < 0.5f -> Triple(0, 255, 100)
-                            smoothed < 0.8f -> Triple(255, 150, 0)
-                            else            -> Triple(255, 0, 0)
-                        }
-                        setBrightness(bright)
-                        setColor(r, g, b)
-                    }
-                    delay(50)
-                }
-            } catch (e: SecurityException) {
-                runOnUiThread { tvStatus.text = "Permission micro refusée" }
-            } finally {
-                audioRecord?.stop(); audioRecord?.release()
-            }
-        }
-    }
-
-    private fun stopMusicSync() {
-        musicJob?.cancel(); musicJob = null
-        tvStatus.text = "🎵 Sync musique arrêtée"
-    }
-
-    // ════════════════════════════
-    // UTILITAIRES
-    // ════════════════════════════
 
     private fun write(charUUID: UUID, data: ByteArray) {
         val gatt = connectedGatt ?: return
@@ -423,29 +434,8 @@ class MainActivity : AppCompatActivity() {
         } catch (e: SecurityException) {}
     }
 
-    private fun rgbToXY(r: Int, g: Int, b: Int): Pair<Float, Float> {
-        var red = r / 255f; var green = g / 255f; var blue = b / 255f
-        red   = if (red   > 0.04045f) Math.pow(((red   + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else red   / 12.92f
-        green = if (green > 0.04045f) Math.pow(((green + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else green / 12.92f
-        blue  = if (blue  > 0.04045f) Math.pow(((blue  + 0.055f) / 1.055f).toDouble(), 2.4).toFloat() else blue  / 12.92f
-        val X = red * 0.664511f + green * 0.154324f + blue * 0.162028f
-        val Y = red * 0.283881f + green * 0.668433f + blue * 0.047685f
-        val Z = red * 0.000088f + green * 0.072310f + blue * 0.986039f
-        val sum = X + Y + Z
-        if (sum == 0f) return Pair(0f, 0f)
-        return Pair(X / sum, Y / sum)
-    }
+    // ══════════════════════════════════════════
+    // EFFETS HUE
+    // ══════════════════════════════════════════
 
-    override fun onDestroy() {
-        super.onDestroy()
-        stopEffect(); stopMusicSync(); scope.cancel()
-        try { connectedGatt?.close() } catch (e: SecurityException) {}
-    }
-}
-
-class ScanActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        finish()
-    }
-}
+    private fun stopEffect() { effectJob?.
