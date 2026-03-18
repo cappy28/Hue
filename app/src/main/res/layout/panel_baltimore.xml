@@ -6,13 +6,14 @@
     <TextView android:text="🔲 Baltimore Panel Light"
         android:textColor="#FF6B35" android:textStyle="bold" android:textSize="16sp"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"/>
+        android:layout_marginBottom="6dp"/>
 
-    <!-- Scanner IR -->
-    <TextView android:text="Maintiens appuyé sur un bouton pour le programmer"
-        android:textColor="#AAAAAA" android:textSize="12sp"
+    <TextView android:text="💡 Maintiens appuyé un bouton pour le programmer avec le scanner IR"
+        android:textColor="#AAAAAA" android:textSize="11sp"
         android:layout_width="wrap_content" android:layout_height="wrap_content"
         android:layout_marginBottom="6dp"/>
+
+    <!-- Scanner IR -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:layout_marginBottom="10dp">
         <Button android:id="@+id/balScan" android:text="🔍 Scanner IR"
@@ -37,10 +38,10 @@
     <!-- Luminosité -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:layout_marginBottom="6dp">
-        <Button android:id="@+id/balBrightP" android:text="☀️+"
+        <Button android:id="@+id/balBrightP" android:text="☀️ +"
             android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
             android:layout_marginEnd="4dp" android:backgroundTint="#555577"/>
-        <Button android:id="@+id/balBrightM" android:text="☀️-"
+        <Button android:id="@+id/balBrightM" android:text="☀️ -"
             android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
             android:backgroundTint="#555577"/>
     </LinearLayout>
@@ -79,19 +80,99 @@
             android:backgroundTint="#FF8C42"/>
     </LinearLayout>
 
-    <!-- Modes -->
+    <!-- Couleurs ligne 3 -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
         android:orientation="horizontal" android:layout_marginBottom="6dp">
+        <Button android:id="@+id/balPink" android:text="🩷"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#FF0096"/>
+        <Button android:id="@+id/balPurple" android:text="🟣"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#7700FF"/>
+        <Button android:id="@+id/balYellow" android:text="🟡"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#FFCC00"/>
+        <Button android:id="@+id/balWarmW2" android:text="🌡️ WW"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#FF8C42"/>
+    </LinearLayout>
+
+    <!-- Modes et vitesse -->
+    <TextView android:text="✨ Modes" android:textColor="#CCCCCC"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginBottom="4dp">
         <Button android:id="@+id/balMode" android:text="🔄 Mode"
             android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
             android:backgroundTint="#334"/>
         <Button android:id="@+id/balNight" android:text="🌙 Nuit"
             android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
             android:backgroundTint="#334"/>
-        <Button android:id="@+id/balSpeedP" android:text="⏩+"
+        <Button android:id="@+id/balSpeedP" android:text="⏩ +"
             android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
             android:backgroundTint="#334"/>
-        <Button android:id="@+id/balSpeedM" android:text="⏩-"
+        <Button android:id="@+id/balSpeedM" android:text="⏩ -"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+    </LinearLayout>
+
+    <!-- Effets -->
+    <TextView android:text="✨ Effets" android:textColor="#CCCCCC"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginBottom="4dp">
+        <Button android:id="@+id/balFlash" android:text="⚡ Flash"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+        <Button android:id="@+id/balStrobe" android:text="🔦 Strobe"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+        <Button android:id="@+id/balFade" android:text="🌅 Fade"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+        <Button android:id="@+id/balSmooth" android:text="🌊 Smooth"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+    </LinearLayout>
+
+    <!-- Musique -->
+    <TextView android:text="🎵 Sync Musique" android:textColor="#CCCCCC"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginBottom="4dp">
+        <Button android:id="@+id/balMusic1" android:text="🎵 M1"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#9C27B0"/>
+        <Button android:id="@+id/balMusic2" android:text="🎵 M2"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#9C27B0"/>
+        <Button android:id="@+id/balMusic3" android:text="🎵 M3"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#9C27B0"/>
+        <Button android:id="@+id/balMusic4" android:text="🎵 M4"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#9C27B0"/>
+    </LinearLayout>
+
+    <!-- Timers -->
+    <TextView android:text="⏱️ Timers" android:textColor="#CCCCCC"
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="horizontal" android:layout_marginBottom="6dp">
+        <Button android:id="@+id/balTimer1" android:text="1H"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+        <Button android:id="@+id/balTimer2" android:text="2H"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+        <Button android:id="@+id/balTimer3" android:text="3H"
+            android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
+            android:backgroundTint="#334"/>
+        <Button android:id="@+id/balTimer4" android:text="4H"
             android:layout_width="0dp" android:layout_height="42dp" android:layout_weight="1"
             android:backgroundTint="#334"/>
     </LinearLayout>
