@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private var musicJob: Job? = null
     private var scanJob: Job? = null
     private var lastScannedCode = 0
+    private var lastScannedFreq = 38000
     private var scanningFor = "on"
 
     private val permissionLauncher = registerForActivityResult(
@@ -189,9 +190,7 @@ class MainActivity : AppCompatActivity() {
         )
 
         buttons.forEach { (id, key) ->
-            findViewById<Button>(id).setOnClickListener {
-                sendBalCode(key)
-            }
+            findViewById<Button>(id).setOnClickListener { sendBalCode(key) }
             findViewById<Button>(id).setOnLongClickListener {
                 scanningFor = key
                 startBaltimoreScan()
@@ -205,7 +204,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun sendBalCode(key: String) {
         val code = ir.getBalCode(key)
-        if (code != 0) ir.send(code)
+        val freq = ir.getBalFreq(key)
+        if (code != 0) ir.sendWithFreq(code, freq)
         else {
             scanningFor = key
             tvStatus.text = "⚠️ Maintiens appuyé ce bouton pour le programmer !"
@@ -214,24 +214,28 @@ class MainActivity : AppCompatActivity() {
 
     private fun startBaltimoreScan() {
         scanJob?.cancel()
-        tvStatus.text = "🔍 Scanner IR pour '$scanningFor'\nQuand la lampe réagit → STOP !"
+        tvStatus.text = "🔍 Scanner pour '$scanningFor' — Regarde la lampe !\nQuand elle réagit → STOP !"
         scanJob = hue.scope.launch {
-            for (code in ir.irScanCodes()) {
-                lastScannedCode = code
-                runOnUiThread {
-                    tvStatus.text = "📡 Test: 0x${code.toString(16).uppercase()}"
+            for (freq in ir.irScanFreqs()) {
+                for (code in ir.irScanCodes()) {
+                    lastScannedCode = code
+                    lastScannedFreq = freq
+                    runOnUiThread {
+                        tvStatus.text = "📡 ${freq}Hz — 0x${code.toString(16).uppercase()}"
+                    }
+                    ir.sendWithFreq(code, freq)
+                    delay(800)
                 }
-                ir.send(code)
-                delay(1000)
             }
-            runOnUiThread { tvStatus.text = "Scan terminé — réessaie" }
+            runOnUiThread { tvStatus.text = "❌ Scan terminé sans réponse — réessaie" }
         }
     }
 
     private fun stopBaltimoreScan() {
         scanJob?.cancel()
         ir.saveBalCode(scanningFor, lastScannedCode)
-        tvStatus.text = "✅ Code '$scanningFor' sauvegardé !\n0x${lastScannedCode.toString(16).uppercase()}"
+        ir.saveBalFreq(scanningFor, lastScannedFreq)
+        tvStatus.text = "✅ '$scanningFor' sauvegardé !\nCode: 0x${lastScannedCode.toString(16).uppercase()} — ${lastScannedFreq}Hz"
     }
 
     // ══════════════════════════════════════════
